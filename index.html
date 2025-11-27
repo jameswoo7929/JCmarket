@@ -1,1143 +1,1241 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { 
-  ShoppingCart, 
-  User, 
-  Package, 
-  Settings, 
-  LogOut, 
-  Plus, 
-  Edit, 
-  Trash2, 
-  CheckCircle, 
-  AlertCircle, 
-  Download, 
-  Upload,
-  CreditCard,
-  UserCheck, 
-  UserX,
-  Info,
-  Store,
-  LayoutDashboard,
-  Search,
-  Filter,
-  MessageSquare, 
-  Bell,           
-  X,
-  Send,
-  Clock,
-  Printer, 
-  FileSpreadsheet, 
-  CheckSquare,
-  Square,
-  Crown,
-  Tag
-} from 'lucide-react';
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JCmarket 購物網</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        /* Custom Styles */
+        body { font-family: 'Noto Sans TC', sans-serif; background-color: #f3f4f6; }
+        .hide { display: none !important; }
+        .modal { background-color: rgba(0,0,0,0.5); }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+        .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+        
+        /* Product Card Hover Effect */
+        .product-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+    </style>
+</head>
+<body class="text-gray-800">
 
-// --- 輔助函數 ---
-const generateUniqueId = () => {
-  return Date.now() + Math.random();
-};
+    <!-- Notifications Container -->
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
 
-// --- 資料生成工具 ---
-const generateProducts = () => {
-  const categories = [
-    { name: '3C電子', items: ['iPhone 15 Pro', 'iPad Air', 'AirPods Pro', 'Sony WH-1000XM5', 'Switch OLED', 'GoPro Hero 12', 'Dyson 吹風機', 'Apple Watch', '小米行動電源', '羅技滑鼠', '機械鍵盤', '電競螢幕', '藍芽喇叭', '單眼相機', '空拍機'] },
-    { name: '大型家電', items: ['LG 變頻冰箱', '日立 洗脫烘', 'Sony 65吋電視', '大金 冷氣', 'Dyson 吸塵器', '掃地機器人', '空氣清淨機', '除濕機', '微波爐', '氣炸鍋', '電子鍋', '咖啡機', '洗碗機', '烤箱', '果汁機'] },
-    { name: '美妝保養', items: ['SK-II 青春露', '雅詩蘭黛 小棕瓶', '蘭蔻 小黑瓶', 'Kiehl\'s 化妝水', 'Jo Malone 香水', 'YSL 唇膏', 'Dior 氣墊粉餅', 'MAC 粉底液', '防曬乳', '護手霜', '面膜組', '精華液', '眼霜', '卸妝油', '洗面乳'] },
-    { name: '流行服飾', items: ['Nike Air Force', 'Adidas 跑鞋', 'New Balance', 'Levi\'s 牛仔褲', 'Uniqlo 羽絨衣', 'The North Face 外套', '機能運動褲', '純棉素T', '棒球帽', '側背包', '後背包', '真皮皮夾', '運動襪', '涼鞋', '風衣'] },
-    { name: '日用生活', items: ['舒潔 衛生紙', 'Ariel 洗衣球', '好神拖', '收納箱', '保溫杯', '不沾鍋', '刀具組', '雙人床包', '記憶枕', '擴香瓶', '口罩', '濕紙巾', '洗碗精', '牙刷組', '沐浴乳'] },
-    { name: '美食保健', items: ['葉黃素', '益生菌', 'B群', '膠原蛋白', '滴雞精', '燕窩', '堅果桶', '快煮麵', '牛肉麵調理包', '濾掛咖啡', '高山茶', '氣泡水', '進口零食', '巧克力', '橄欖油'] }
-  ];
-
-  let products = [];
-  let idCounter = 1;
-
-  categories.forEach(cat => {
-    cat.items.forEach(itemName => {
-      let basePrice = 0;
-      if (cat.name === '3C電子') basePrice = Math.floor(Math.random() * 30000) + 5000;
-      else if (cat.name === '大型家電') basePrice = Math.floor(Math.random() * 50000) + 10000;
-      else if (cat.name === '美妝保養') basePrice = Math.floor(Math.random() * 5000) + 1000;
-      else basePrice = Math.floor(Math.random() * 3000) + 500;
-      
-      const price = Math.round(basePrice / 10) * 10;
-      const cost = Math.round(price * 0.7); 
-
-      products.push({
-        id: idCounter++,
-        name: itemName,
-        category: cat.name,
-        price: price,
-        cost: cost, 
-        discount: 0,
-        noMemberDiscount: Math.random() > 0.9,
-        image: `https://image.pollinations.ai/prompt/${encodeURIComponent(itemName + ' product white background minimal')}?width=400&height=400&nologo=true`, 
-        description: `【${itemName}】MOMO熱銷推薦！全館免運，現貨供應中。此商品為${cat.name}類別中的人氣首選。`,
-        stock: Math.floor(Math.random() * 50) + 10,
-        tags: Math.random() > 0.7 ? ['熱銷', '推薦'] : []
-      });
-    });
-  });
-
-  return products.slice(0, 100);
-};
-
-const INITIAL_PRODUCTS = generateProducts();
-const INITIAL_CATEGORIES = ['全部', '3C電子', '大型家電', '美妝保養', '流行服飾', '日用生活', '美食保健'];
-
-const INITIAL_MEMBER_LEVELS = [
-  { name: '一般會員', discount: 0 },
-  { name: '黃金會員', discount: 5 },
-  { name: '白金會員', discount: 10 },
-  { name: '鑽石會員', discount: 15 }
-];
-
-const INITIAL_MEMBERS = [
-  { 
-    id: 'A123456789', 
-    name: '測試會員', 
-    password: '6789990101', 
-    phone: '0912345678', 
-    address: '台北市信義區', 
-    joinedDate: '2023-01-01',
-    status: 'active',
-    level: '一般會員'
-  }
-];
-
-const INITIAL_ORDERS = [];
-const INITIAL_MESSAGES = [
-  { id: 1, userId: 'A123456789', sender: 'admin', content: '歡迎加入 JCmarket！有任何問題歡迎留言詢問。', timestamp: '2023-01-01 10:00', read: false }
-];
-
-// --- UI Components ---
-
-const Button = ({ children, onClick, variant = 'primary', className = '', ...props }) => {
-  const baseStyle = "px-4 py-2 rounded-lg font-medium transition-all duration-200 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed text-sm md:text-base";
-  const variants = {
-    primary: "bg-blue-600 text-white hover:bg-blue-700 shadow-sm", 
-    secondary: "bg-gray-100 text-gray-700 hover:bg-gray-200",
-    danger: "bg-red-500 text-white hover:bg-red-600",
-    success: "bg-green-500 text-white hover:bg-green-600",
-    outline: "border-2 border-blue-600 text-blue-600 hover:bg-blue-50", 
-    warning: "bg-orange-500 text-white hover:bg-orange-600", 
-    info: "bg-cyan-500 text-white hover:bg-cyan-600"
-  };
-  return (
-    <button onClick={onClick} className={`${baseStyle} ${variants[variant]} ${className}`} {...props}>
-      {children}
-    </button>
-  );
-};
-
-const Input = ({ label, error, ...props }) => (
-  <div className="mb-3">
-    {label && <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>}
-    <input 
-      className={`w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 transition-colors ${
-        error ? 'border-red-500 focus:ring-red-200' : 'border-gray-300 focus:ring-blue-500'
-      }`}
-      {...props}
-    />
-    {error && <p className="text-red-500 text-xs mt-1">{error}</p>}
-  </div>
-);
-
-// OrderCard: 改為接收 onOpenChat 而非直接 onMessage
-const OrderCard = ({ order, isPending, isSelected, onToggleSelect, onReview, onPrint, onOpenChat }) => (
-  <div className={`bg-white p-6 rounded-lg shadow border mb-4 transition-all ${isSelected ? 'border-blue-500 ring-1 ring-blue-500 bg-blue-50' : 'border-gray-100'}`}>
-    <div className="flex justify-between mb-4">
-      <div className="flex items-center gap-3">
-        <button onClick={() => onToggleSelect(order.id)} className="text-gray-400 hover:text-blue-600">
-          {isSelected ? <CheckSquare size={24} className="text-blue-600"/> : <Square size={24}/>}
-        </button>
-        <div>
-          <h4 className="font-bold text-lg">{order.id}</h4>
-          <div className="text-sm text-gray-500">{order.userName} ({order.userId})</div>
+    <!-- LOGIN PAGE -->
+    <section id="page-login" class="min-h-screen flex items-center justify-center bg-blue-50">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h1 class="text-3xl font-bold text-center text-pink-600 mb-2">JCmarket</h1>
+            <p class="text-center text-gray-500 mb-6">購物網站登入系統</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">帳號 (身分證字號)</label>
+                    <input type="text" id="login-username" placeholder="例：A123456789" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-pink-500 focus:border-pink-500">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">密碼</label>
+                    <input type="password" id="login-password" placeholder="身分證後4碼+生日(YYMMDD) 共10碼" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-pink-500 focus:border-pink-500">
+                </div>
+                <button onclick="handleLogin()" class="w-full bg-pink-600 text-white py-2 rounded-md hover:bg-pink-700 transition">登入 / 註冊</button>
+            </div>
+            
+            <div class="mt-4 text-xs text-gray-500 bg-gray-100 p-3 rounded">
+                <p><strong>首次登入說明：</strong></p>
+                <p>請輸入您的身分證字號作為帳號。</p>
+                <p>密碼規則：身分證後4碼 + 生日西元年末兩碼月兩碼日兩碼 (共10碼)。</p>
+                <p>例如：身分證 A12345<strong>6789</strong>，生日 1999/01/01 (990101)</p>
+                <p>密碼為：<strong>6789990101</strong></p>
+                <p>首次輸入正確格式後，系統將引導您填寫基本資料。</p>
+                <p class="mt-2 text-blue-600">管理員測試帳號：admin / admin</p>
+            </div>
         </div>
-      </div>
-      <div className="flex flex-col items-end gap-2">
-         <span className={`px-2 py-1 h-fit rounded text-sm font-bold ${isPending ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}`}>{isPending ? '待核對' : '訂單成立'}</span>
-         <span className="text-xs text-gray-400">{order.date}</span>
-      </div>
-    </div>
-    <div className="bg-gray-50 p-3 rounded mb-4 ml-9">
-      {order.items.map((i,idx)=> (
-        <div key={idx} className="flex justify-between text-sm py-1 border-b last:border-0 border-gray-200">
-          <span>{i.name} x {i.qty}</span>
-          <div className="flex gap-2">
-              {i.finalPrice !== i.originalPrice && <span className="text-gray-400 line-through">${i.originalPrice*i.qty}</span>}
-              <span className="font-mono font-bold">${i.finalPrice*i.qty}</span>
-          </div>
+    </section>
+
+    <!-- REGISTER PAGE -->
+    <section id="view-register" class="hide min-h-screen flex items-center justify-center bg-blue-50">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
+            <h2 class="text-2xl font-bold text-center text-pink-600 mb-6">會員資料填寫</h2>
+            <p class="text-sm text-gray-500 mb-4 text-center">請完成基本資料以送出審核</p>
+            
+            <div class="space-y-4">
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">帳號 (唯讀)</label>
+                        <input type="text" id="reg-id" class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md p-2 text-gray-500 cursor-not-allowed" readonly>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">生日 (唯讀)</label>
+                        <input type="text" id="reg-birthday" class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md p-2 text-gray-500 cursor-not-allowed" readonly>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">真實姓名 <span class="text-red-500">*</span></label>
+                    <input type="text" id="reg-name" placeholder="請輸入姓名" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">性別 <span class="text-red-500">*</span></label>
+                    <select id="reg-gender" class="mt-1 block w-full border border-gray-300 rounded-md p-2 bg-white">
+                        <option value="male">男</option>
+                        <option value="female">女</option>
+                        <option value="other">其他</option>
+                    </select>
+                </div>
+
+                <div>
+                    <label class="block text-sm font-medium text-gray-700">聯絡電話 <span class="text-red-500">*</span></label>
+                    <input type="tel" id="reg-phone" placeholder="例：0912345678" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
+                </div>
+                
+                <button onclick="submitRegistration()" class="w-full bg-green-600 text-white py-2 rounded-md hover:bg-green-700 transition shadow">送出申請</button>
+                <button onclick="cancelRegistration()" class="w-full bg-gray-300 text-gray-700 py-2 rounded-md hover:bg-gray-400 transition">取消返回</button>
+            </div>
         </div>
-      ))}
-      <div className="flex justify-between font-bold text-lg mt-2 pt-2 border-t border-gray-300"><span>總金額</span><span>${order.total}</span></div>
-    </div>
-    
-    <div className="flex gap-2 ml-9">
-      {isPending && (
-        <Button onClick={() => onReview(order)} className="flex-1 bg-blue-600 hover:bg-blue-700"><Edit size={16}/> 核對/調價</Button>
-      )}
-      {!isPending && (
-        <Button onClick={() => onPrint([order])} variant="outline" className="flex-1 border-gray-300 text-gray-600 hover:bg-gray-100">
-          <Printer size={16}/> 列印訂單
-        </Button>
-      )}
-      {/* 修正：點擊直接開啟聊天室窗 */}
-      <Button variant="outline" className="flex-1" onClick={() => onOpenChat(order.userId)}>
-        <MessageSquare size={16}/> 傳送訊息
-      </Button>
-    </div>
-  </div>
-);
+    </section>
 
-// --- Main App ---
-
-export default function JCmarketApp() {
-  const [view, setView] = useState('login'); 
-  const [user, setUser] = useState(null); 
-  const [products, setProducts] = useState(INITIAL_PRODUCTS);
-  const [categories, setCategories] = useState(INITIAL_CATEGORIES);
-  const [members, setMembers] = useState(INITIAL_MEMBERS);
-  const [memberLevels, setMemberLevels] = useState(INITIAL_MEMBER_LEVELS); 
-  const [cart, setCart] = useState([]);
-  const [orders, setOrders] = useState(INITIAL_ORDERS);
-  const [selectedProduct, setSelectedProduct] = useState(null);
-  
-  const [chatMessages, setChatMessages] = useState(INITIAL_MESSAGES); 
-  const [userNotifications, setUserNotifications] = useState([]); 
-  const [systemMessages, setSystemMessages] = useState([]); 
-
-  const [loginId, setLoginId] = useState('');
-  const [loginPwd, setLoginPwd] = useState('');
-  const [loginStatus, setLoginStatus] = useState({ type: '', msg: '' }); 
-
-  const [filter, setFilter] = useState('全部');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  const [cartStep, setCartStep] = useState('cart');
-  const [delivery, setDelivery] = useState({ method: 'pickup', name: '', phone: '', address: '' });
-
-  const [adminTab, setAdminTab] = useState('orders');
-  const [editingProduct, setEditingProduct] = useState(null);
-  const [isProductModalOpen, setIsProductModalOpen] = useState(false);
-  const [editingMember, setEditingMember] = useState(null); 
-  const [isMemberModalOpen, setIsMemberModalOpen] = useState(false);
-  const [isLevelModalOpen, setIsLevelModalOpen] = useState(false); 
-  const [reviewingOrder, setReviewingOrder] = useState(null); 
-  const [isOrderReviewModalOpen, setIsOrderReviewModalOpen] = useState(false);
-  
-  const [activeChatUser, setActiveChatUser] = useState(null);
-  const [selectedOrderIds, setSelectedOrderIds] = useState([]);
-
-  const [msgInput, setMsgInput] = useState('');
-  
-  const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
-
-  // --- Logic ---
-  
-  const getUserDiscountRate = (userObj) => {
-    if (!userObj || !userObj.level) return 0;
-    const levelObj = memberLevels.find(l => l.name === userObj.level);
-    return levelObj ? levelObj.discount : 0;
-  };
-
-  const calculateFinalPrice = (product, userObj) => {
-    let price = product.price;
-    if (product.discount > 0) {
-      price = Math.round(price * (1 - product.discount / 100));
-    }
-    if (!product.noMemberDiscount && userObj) {
-      const memberDiscountRate = getUserDiscountRate(userObj);
-      if (memberDiscountRate > 0) {
-        price = Math.round(price * (1 - memberDiscountRate / 100));
-      }
-    }
-    return price;
-  };
-
-  const getDiscountLabel = (product, userObj) => {
-    const labels = [];
-    if (product.discount > 0) labels.push(`-${product.discount}%`);
-    if (!product.noMemberDiscount && userObj) {
-      const rate = getUserDiscountRate(userObj);
-      if (rate > 0) labels.push(`會員-${rate}%`);
-    } else if (product.noMemberDiscount) {
-      labels.push('特價品');
-    }
-    return labels;
-  };
-
-  const sendChatMessage = (targetUserId, senderRole, content) => {
-    const newMessage = {
-      id: generateUniqueId(),
-      userId: targetUserId,
-      sender: senderRole, 
-      content: content,
-      timestamp: new Date().toLocaleString(),
-      read: false
-    };
-    setChatMessages(prev => [...prev, newMessage]);
-
-    if (senderRole === 'admin') {
-      const notify = { 
-        id: generateUniqueId(),
-        userId: targetUserId, 
-        title: '新訊息', 
-        content: `管理員傳送了一則訊息給您`, 
-        read: false, 
-        time: new Date().toLocaleString() 
-      };
-      setUserNotifications(prev => [notify, ...prev]);
-    }
-  };
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
-
-  useEffect(() => {
-    if (view === 'userProfile' || activeChatUser) {
-      scrollToBottom();
-    }
-  }, [chatMessages, view, activeChatUser]);
-
-  // 清空輸入框 (當切換聊天對象或視圖時)
-  useEffect(() => {
-    setMsgInput('');
-  }, [activeChatUser, view]);
-
-  const generateOrderId = () => {
-    const now = new Date();
-    const year = String(now.getFullYear()).slice(-2);
-    const month = String(now.getMonth() + 1).padStart(2, '0');
-    const day = String(now.getDate()).padStart(2, '0');
-    const datePrefix = `${year}${month}${day}`;
-    const todayOrdersCount = orders.filter(o => o.id.toString().startsWith(datePrefix)).length;
-    const sequence = String(todayOrdersCount + 1).padStart(4, '0');
-    return `${datePrefix}${sequence}`;
-  };
-
-  const printOrders = (orderList) => {
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return alert('請允許彈出視窗以進行列印');
-
-    const content = orderList.map(order => `
-      <div class="order-page">
-        <div class="header"><h1>JCmarket 訂購單</h1><p>單號：${order.id}</p><p>日期：${order.date}</p></div>
-        <div class="customer-info">
-          <h3>客戶資訊</h3>
-          <p>姓名：${order.userName} (${order.userId})</p>
-          <p>電話：${order.delivery.phone}</p>
-          <p>方式：${order.delivery.method === 'pickup' ? '自取' : '宅配'}</p>
-          ${order.delivery.method === 'shipping' ? `<p>地址：${order.delivery.address}</p>` : ''}
-        </div>
-        <table class="items-table">
-          <thead><tr><th>品名</th><th>數量</th><th>單價</th><th>小計</th></tr></thead>
-          <tbody>${order.items.map(i => `<tr><td>${i.name}</td><td>${i.qty}</td><td>$${i.finalPrice}</td><td>$${i.finalPrice * i.qty}</td></tr>`).join('')}</tbody>
-          <tfoot><tr><td colspan="3">總金額</td><td>$${order.total}</td></tr></tfoot>
-        </table>
-      </div>
-    `).join('<div class="page-break"></div>');
-
-    printWindow.document.write(`<html><head><title>列印</title><style>body{font-family:sans-serif;padding:20px}.order-page{border:1px solid #333;padding:20px;margin-bottom:30px}.header{text-align:center;border-bottom:1px solid #ccc;margin-bottom:20px}.items-table{width:100%;border-collapse:collapse;margin-top:20px}th,td{border:1px solid #ddd;padding:8px;text-align:left}.page-break{page-break-after:always}@media print{.order-page{border:none}}</style></head><body>${content}<script>window.onload=function(){window.print()}</script></body></html>`);
-    printWindow.document.close();
-  }; 
-
-  const exportOrdersToExcel = (orderList) => {
-    let csvContent = "\uFEFF訂單編號,會員ID,會員姓名,訂購日期,總金額,狀態,配送方式,電話,地址,商品明細\n";
-    orderList.forEach(order => {
-      const itemsString = order.items.map(i => `${i.name} x${i.qty}`).join(" | ");
-      const row = [`"${order.id}"`, order.userId, order.userName, order.date, order.total, order.status, order.delivery.method, order.delivery.phone, `"${order.delivery.address || ''}"`, `"${itemsString}"`];
-      csvContent += row.join(",") + "\n";
-    });
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = `訂單匯出.csv`;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
-
-  // --- Handlers ---
-
-  const handleLogin = (e) => {
-    e.preventDefault();
-    setLoginStatus({ type: '', msg: '' });
-    const cleanId = loginId.trim().toUpperCase(); 
-    const cleanPwd = loginPwd.trim();
-
-    if (cleanId === 'ADMIN' && cleanPwd === 'admin') {
-      setUser({ role: 'admin', id: 'ADMIN', name: '管理員', level: '超級管理員', phone: '0900000000', address: '總部' });
-      setView('admin');
-      return;
-    }
-
-    const existingMember = members.find(m => m.id === cleanId);
-    if (existingMember) {
-      if (existingMember.password === cleanPwd) {
-        if (existingMember.status === 'active') {
-          setUser({ role: 'member', ...existingMember });
-          setDelivery(prev => ({ ...prev, name: existingMember.name, phone: existingMember.phone, address: existingMember.address }));
-          setView('store');
-        } else {
-          setLoginStatus({ type: 'warning', msg: `帳號審核中。` });
-        }
-      } else {
-        setLoginStatus({ type: 'error', msg: '密碼錯誤。' });
-      }
-      return;
-    }
-
-    if (cleanId.length === 10 && cleanPwd.length === 10) {
-      const newMember = { id: cleanId, password: cleanPwd, name: '新註冊會員', phone: '', address: '', joinedDate: new Date().toISOString().split('T')[0], status: 'pending', level: '一般會員' };
-      setMembers([...members, newMember]);
-      setSystemMessages(prev => [{ id: generateUniqueId(), type: 'register', content: `新會員申請：${cleanId}`, read: false }, ...prev]);
-      setLoginStatus({ type: 'success', msg: `已收到申請，等待管理員審核中。` });
-    } else {
-      setLoginStatus({ type: 'error', msg: `格式錯誤：帳號需10碼，密碼需10碼。` });
-    }
-  };
-
-  const handleLogout = () => {
-    setUser(null);
-    setCart([]);
-    setLoginId('');
-    setLoginPwd('');
-    setLoginStatus({ type: '', msg: '' });
-    setView('login');
-  };
-
-  const addToCart = (product) => {
-    setCart(prev => {
-      const existing = prev.find(item => item.id === product.id);
-      const finalPrice = calculateFinalPrice(product, user);
-      if (existing) return prev.map(item => item.id === product.id ? { ...item, qty: item.qty + 1 } : item);
-      return [...prev, { ...product, qty: 1, originalPrice: product.price, finalPrice: finalPrice }];
-    });
-    alert('已加入購物車！');
-  };
-
-  const removeFromCart = (id) => setCart(prev => prev.filter(item => item.id !== id));
-  const updateCartQty = (id, delta) => setCart(prev => prev.map(item => item.id === id ? { ...item, qty: Math.max(1, item.qty + delta) } : item));
-  const calculateTotal = (items = cart) => items.reduce((sum, item) => sum + (item.finalPrice * item.qty), 0);
-
-  const handlePlaceOrder = () => {
-    const total = calculateTotal();
-    const orderId = generateOrderId();
-    const newOrder = {
-      id: orderId, 
-      userId: user.id,
-      userName: user.name,
-      items: cart.map(item => ({...item})), 
-      total: total,
-      originalTotal: total, 
-      status: 'pending_verification',
-      date: new Date().toLocaleString(), 
-      timestamp: Date.now(), 
-      delivery: delivery,
-      adminNote: ''
-    };
-    setOrders([newOrder, ...orders]);
-    setCart([]);
-    setSystemMessages(prev => [{ id: generateUniqueId(), type: 'order', content: `新訂單成立：${newOrder.id}`, read: false }, ...prev]);
-    const notify = { id: generateUniqueId(), userId: user.id, title: '訂單成立', content: `您的訂單 ${newOrder.id} 已收到。`, read: false, time: new Date().toLocaleString() };
-    setUserNotifications(prev => [notify, ...prev]);
-    alert(`訂單已送出！編號：${orderId}`);
-    setView('store');
-  };
-
-  const saveMember = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const memberId = formData.get('id');
-    
-    const memberData = {
-      id: memberId,
-      name: formData.get('name'),
-      password: formData.get('password'),
-      level: formData.get('level'),
-      phone: formData.get('phone'),
-      address: formData.get('address'),
-      status: formData.get('status') || 'active',
-      joinedDate: editingMember ? editingMember.joinedDate : new Date().toISOString().split('T')[0]
-    };
-
-    if (editingMember) {
-      setMembers(members.map(m => m.id === editingMember.id ? { ...m, ...memberData } : m));
-    } else {
-      if (members.some(m => m.id === memberId)) {
-        alert('此會員 ID 已存在！');
-        return;
-      }
-      setMembers([...members, memberData]);
-    }
-    setIsMemberModalOpen(false);
-    setEditingMember(null);
-    alert('會員資料已儲存');
-  };
-
-  const saveMemberLevels = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const newLevels = memberLevels.map((lvl, idx) => ({
-      name: formData.get(`name_${idx}`),
-      discount: Number(formData.get(`discount_${idx}`))
-    }));
-    setMemberLevels(newLevels);
-    setIsLevelModalOpen(false);
-    alert('等級設定已更新');
-  };
-
-  const saveProduct = (e) => {
-    e.preventDefault();
-    const formData = new FormData(e.target);
-    const price = Number(formData.get('price'));
-    const discount = Number(formData.get('discount')) || 0;
-    const noMemberDiscount = formData.get('noMemberDiscount') === 'on';
-
-    let imageUrl = formData.get('image');
-    if (!imageUrl || imageUrl === 'Product') {
-       const productName = formData.get('name');
-       imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(productName + ' product white background minimal')}?width=400&height=400&nologo=true`;
-    }
-
-    const productData = { 
-      name: formData.get('name'), 
-      category: formData.get('category'), 
-      price: price, 
-      discount: discount,
-      noMemberDiscount: noMemberDiscount,
-      cost: Math.round(price * 0.7), 
-      stock: Number(formData.get('stock')), 
-      description: formData.get('description'), 
-      image: imageUrl
-    };
-
-    if (editingProduct) setProducts(products.map(p => p.id === editingProduct.id ? { ...p, ...productData } : p));
-    else setProducts([...products, { id: generateUniqueId(), ...productData }]); 
-    
-    setIsProductModalOpen(false);
-    setEditingProduct(null);
-  };
-
-  const approveMember = (id) => setMembers(members.map(m => m.id===id?{...m, status:'active'}:m));
-  const deleteMember = (id) => { if(confirm('刪除?')) setMembers(members.filter(m=>m.id!==id)) };
-  const deleteProduct = (id) => { if(confirm('刪除?')) setProducts(products.filter(p=>p.id!==id)) };
-  
-  const openOrderReview = (order) => { setReviewingOrder(JSON.parse(JSON.stringify(order))); setIsOrderReviewModalOpen(true); };
-  const updateOrderItemPrice = (idx, val) => {
-    setReviewingOrder(prev => {
-      const items = [...prev.items];
-      items[idx].finalPrice = Number(val);
-      const total = items.reduce((s, i) => s + i.finalPrice * i.qty, 0);
-      return { ...prev, items, total };
-    });
-  };
-  const confirmOrderReview = () => {
-    if (!reviewingOrder) return;
-    setOrders(prev => prev.map(o => o.id === reviewingOrder.id ? { ...reviewingOrder, status: 'established', adminNote: reviewingOrder.delivery.method==='shipping'?'匯款帳號: (822) 1234':'請自取' } : o));
-    setIsOrderReviewModalOpen(false);
-    setReviewingOrder(null);
-    alert('已核對');
-  };
-
-  const toggleOrderSelection = (id) => setSelectedOrderIds(prev => prev.includes(id)?prev.filter(i=>i!==id):[...prev,id]);
-  const handleBatchPrint = () => { if(selectedOrderIds.length) printOrders(orders.filter(o=>selectedOrderIds.includes(o.id))); };
-  const handleBatchExcel = () => { if(selectedOrderIds.length) exportOrdersToExcel(orders.filter(o=>selectedOrderIds.includes(o.id))); };
-  const toggleSelectAll = (list) => {
-    const ids = list.map(o=>o.id);
-    setSelectedOrderIds(prev => ids.every(id=>prev.includes(id)) ? prev.filter(id=>!ids.includes(id)) : [...new Set([...prev,...ids])]);
-  };
-
-  // --- Views ---
-
-  const renderStoreHeader = () => {
-    const unreadCount = user ? userNotifications.filter(n => n.userId === user.id && !n.read).length : 0;
-    return (
-      <header className="bg-white shadow-md sticky top-0 z-50">
-        <div className="bg-blue-800 text-white text-xs py-1 text-center">JCmarket 全新上線！全館滿千免運</div>
-        <div className="max-w-7xl mx-auto px-4 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-2 cursor-pointer" onClick={() => setView('store')}>
-            <div className="bg-orange-500 text-white p-2 rounded-lg font-bold text-xl">JC</div>
-            <span className="text-2xl font-bold text-blue-600 hidden sm:block">JCmarket</span>
-          </div>
-          <div className="flex items-center gap-3">
-            {user?.role === 'admin' && <Button variant="outline" size="sm" onClick={() => setView('admin')}><LayoutDashboard size={18}/> 返回後台</Button>}
-            {user && <button className="relative p-2 text-gray-600 hover:text-blue-600" onClick={() => setView('userProfile')}><User size={24}/>{unreadCount > 0 && <span className="absolute top-0 right-0 bg-orange-500 w-3 h-3 rounded-full"></span>}</button>}
-            <button className="relative p-2 text-gray-600 hover:text-blue-600" onClick={() => setView('cart')}><ShoppingCart size={24}/>{cart.length > 0 && <span className="absolute top-0 right-0 bg-orange-500 w-4 h-4 rounded-full text-xs text-white flex items-center justify-center">{cart.length}</span>}</button>
-            <button className="p-2 text-gray-600 hover:text-red-600" onClick={handleLogout}><LogOut size={24}/></button>
-          </div>
-        </div>
-      </header>
-    );
-  };
-
-  const renderLoginView = () => (
-    <div className="min-h-screen bg-blue-50 flex items-center justify-center p-4">
-      <div className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md border-t-4 border-blue-600">
-        <h1 className="text-3xl font-bold text-blue-600 mb-2 text-center">JCmarket</h1>
-        <form onSubmit={handleLogin} className="space-y-6 mt-6">
-          <div className="bg-gray-50 p-4 rounded-lg text-sm text-gray-600 border border-gray-200">
-            <h3 className="font-bold flex items-center gap-2 mb-2 text-blue-600"><Info size={16}/> 會員登入說明</h3>
-            <ul className="list-disc list-inside space-y-1">
-              <li>帳號格式：身分證字號 (10碼)</li>
-              <li>密碼格式：身分證後4碼 + 生日(共10碼)</li>
-              <li className="text-xs text-gray-500 mt-1">範例：身分證...6789 生日1999/01/01 &rarr; 6789990101</li>
-            </ul>
-          </div>
-          <Input label="帳號 / User ID" value={loginId} onChange={e=>setLoginId(e.target.value)} placeholder="身分證字號"/>
-          <Input label="密碼 / Password" type="password" value={loginPwd} onChange={e=>setLoginPwd(e.target.value)} placeholder="密碼"/>
-          {loginStatus.msg && <div className={`p-3 rounded-lg text-sm flex gap-2 ${loginStatus.type === 'error' ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700'}`}><AlertCircle size={16} className="mt-0.5"/>{loginStatus.msg}</div>}
-          <Button type="submit" className="w-full h-12">登入</Button>
-        </form>
-      </div>
-    </div>
-  );
-
-  const renderStoreView = () => {
-    const filtered = products.filter(p => (filter==='全部'||p.category===filter) && p.name.toLowerCase().includes(searchTerm.toLowerCase()));
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        {renderStoreHeader()}
-        <main className="max-w-7xl mx-auto px-4 py-6">
-          <div className="flex overflow-x-auto gap-3 mb-8 pb-2 scrollbar-hide">
-            {categories.map(cat => <button key={cat} onClick={()=>setFilter(cat)} className={`px-5 py-2 rounded-full ${filter===cat?'bg-blue-600 text-white':'bg-white border'}`}>{cat}</button>)}
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-            {filtered.map(p => {
-              const finalPrice = calculateFinalPrice(p, user);
-              const labels = getDiscountLabel(p, user);
-              return (
-                <div key={p.id} className="bg-white rounded-lg shadow hover:shadow-lg cursor-pointer" onClick={()=>{setSelectedProduct(p);setView('productDetail')}}>
-                  <div className="aspect-square bg-gray-100 relative">
-                    <img src={p.image} className="w-full h-full object-cover"/>
-                    <div className="absolute top-0 right-0 flex flex-col items-end p-1 gap-1">
-                      {labels.map((l,i) => <span key={i} className="bg-orange-500 text-white text-xs px-2 py-1 rounded shadow">{l}</span>)}
+    <!-- MAIN APP LAYOUT (Header + Content) -->
+    <div id="app-layout" class="hide min-h-screen flex flex-col">
+        
+        <!-- Header -->
+        <header class="bg-pink-600 text-white shadow-md sticky top-0 z-40">
+            <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <h1 class="text-2xl font-bold cursor-pointer" onclick="router('shop')">JCmarket</h1>
+                    <span id="nav-welcome" class="text-sm bg-pink-700 px-2 py-1 rounded">歡迎, 會員</span>
+                </div>
+                
+                <nav class="flex items-center gap-4">
+                    <!-- User Nav -->
+                    <div id="nav-user" class="flex items-center gap-4">
+                        <button onclick="router('shop')" class="hover:text-pink-200"><i class="fas fa-home"></i> 首頁</button>
+                        <button onclick="router('cart')" class="hover:text-pink-200 relative">
+                            <i class="fas fa-shopping-cart"></i> 購物車
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-400 text-pink-800 text-xs font-bold px-1.5 rounded-full">0</span>
+                        </button>
+                        <button onclick="router('profile')" class="hover:text-pink-200 relative">
+                            <i class="fas fa-user"></i> 會員中心
+                            <span id="msg-badge" class="hide absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                        </button>
                     </div>
-                  </div>
-                  <div className="p-3">
-                    <h3 className="font-medium text-sm line-clamp-2 h-10">{p.name}</h3>
-                    <div className="flex items-end gap-2 mt-1">
-                      <span className="text-lg font-bold text-orange-600">${finalPrice}</span>
-                      {finalPrice < p.price && <span className="text-xs text-gray-400 line-through">${p.price}</span>}
+
+                    <!-- Admin Switch (Visible only to Admin) -->
+                    <button id="btn-admin-switch" onclick="router('admin')" class="hide bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700 text-sm border border-gray-600 shadow-sm">
+                        <i class="fas fa-cogs"></i> 回到後台
+                    </button>
+
+                    <button onclick="logout()" class="text-sm border border-white px-2 py-1 rounded hover:bg-white hover:text-pink-600">登出</button>
+                </nav>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-grow container mx-auto px-4 py-6">
+            
+            <!-- SHOP VIEW -->
+            <section id="view-shop" class="hide">
+                <!-- Categories -->
+                <div class="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide" id="category-list">
+                    <!-- Injected via JS -->
+                </div>
+
+                <!-- Product Grid -->
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4" id="product-grid">
+                    <!-- Injected via JS -->
+                </div>
+            </section>
+
+            <!-- CART VIEW -->
+            <section id="view-cart" class="hide max-w-4xl mx-auto">
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2">購物車</h2>
+                <div id="cart-items" class="bg-white rounded shadow p-4 mb-4">
+                    <!-- Items -->
+                </div>
+                <div class="bg-white rounded shadow p-4 text-right">
+                    <p class="text-xl font-bold text-pink-600">總金額: $<span id="cart-total">0</span></p>
+                    <button onclick="submitOrder()" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700">送出訂單 (待核對)</button>
+                </div>
+            </section>
+
+            <!-- PROFILE VIEW -->
+            <section id="view-profile" class="hide max-w-4xl mx-auto">
+                <div class="grid md:grid-cols-3 gap-6">
+                    <!-- Info -->
+                    <div class="bg-white p-4 rounded shadow">
+                        <h3 class="font-bold text-lg mb-4">會員資料</h3>
+                        <div id="profile-info" class="text-sm space-y-2"></div>
+                        <div class="mt-4 pt-4 border-t">
+                             <h4 class="font-bold mb-2">更改密碼</h4>
+                             <input type="password" id="new-password" placeholder="新密碼" class="w-full border p-1 mb-2 text-sm">
+                             <button onclick="updatePassword()" class="bg-gray-600 text-white px-3 py-1 text-sm rounded">更新</button>
+                        </div>
                     </div>
-                  </div>
-                </div>
-              )
-            })}
-          </div>
-        </main>
-      </div>
-    );
-  };
+                    
+                    <!-- Orders & Messages -->
+                    <div class="md:col-span-2 bg-white p-4 rounded shadow">
+                        <h3 class="font-bold text-lg mb-4">訂單與訊息</h3>
+                        
+                        <!-- Chat Box -->
+                        <div class="border rounded h-64 overflow-y-auto p-3 mb-3 bg-gray-50 flex flex-col gap-2" id="chat-box">
+                            <!-- Messages -->
+                        </div>
+                        <div class="flex gap-2">
+                            <input type="text" id="chat-input" class="flex-grow border p-2 rounded" placeholder="傳送訊息給管理員...">
+                            <button onclick="sendMessage('user')" class="bg-blue-600 text-white px-4 rounded">傳送</button>
+                        </div>
 
-  const renderProductDetail = () => {
-    if (!selectedProduct) return null;
-    const finalPrice = calculateFinalPrice(selectedProduct, user);
-    const labels = getDiscountLabel(selectedProduct, user);
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        {renderStoreHeader()}
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <button onClick={()=>setView('store')} className="mb-4">← 返回</button>
-          <div className="bg-white rounded-2xl shadow flex flex-col md:flex-row overflow-hidden">
-            <div className="md:w-1/2 p-4"><img src={selectedProduct.image} className="w-full h-auto rounded"/></div>
-            <div className="p-8 md:w-1/2 flex flex-col">
-              <h1 className="text-2xl font-bold mb-2">{selectedProduct.name}</h1>
-              <div className="flex flex-wrap gap-2 mb-4">
-                {labels.map((l,i)=><span key={i} className="bg-orange-100 text-orange-700 px-2 py-1 rounded text-sm font-bold">{l}</span>)}
-              </div>
-              <p className="text-gray-600 mb-6">{selectedProduct.description}</p>
-              <div className="mt-auto">
-                <div className="flex items-baseline gap-3 mb-4">
-                   <span className="text-4xl font-bold text-orange-600">${finalPrice}</span>
-                   {finalPrice < selectedProduct.price && <span className="text-xl text-gray-400 line-through">${selectedProduct.price}</span>}
-                </div>
-                <Button className="w-full h-12 text-lg" onClick={()=>addToCart(selectedProduct)}>加入購物車</Button>
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  };
-
-  const renderCart = () => {
-    if (cartStep === 'checkout') {
-       return (
-        <div className="min-h-screen bg-gray-50">
-          {renderStoreHeader()}
-          <div className="max-w-2xl mx-auto px-4 py-8">
-            <button onClick={() => setCartStep('cart')} className="mb-4 text-gray-500">← 返回購物車</button>
-            <div className="bg-white p-8 rounded-2xl shadow-lg border-t-4 border-blue-600">
-              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><CreditCard className="text-blue-600"/> 結帳櫃檯</h2>
-               <div className="space-y-4 mb-8">
-                  <div className="flex gap-4"><button className={`flex-1 py-3 px-4 rounded-lg border-2 ${delivery.method==='pickup'?'border-blue-600 bg-blue-50 text-blue-700':'border-gray-200'}`} onClick={()=>setDelivery({...delivery, method:'pickup'})}>門市自取</button><button className={`flex-1 py-3 px-4 rounded-lg border-2 ${delivery.method==='shipping'?'border-blue-600 bg-blue-50 text-blue-700':'border-gray-200'}`} onClick={()=>setDelivery({...delivery, method:'shipping'})}>宅配寄送</button></div>
-                  <Input label="姓名" value={delivery.name} onChange={e=>setDelivery({...delivery,name:e.target.value})}/>
-                  <Input label="電話" value={delivery.phone} onChange={e=>setDelivery({...delivery,phone:e.target.value})}/>
-                  {delivery.method==='shipping'&&<Input label="地址" value={delivery.address} onChange={e=>setDelivery({...delivery,address:e.target.value})}/>}
-               </div>
-               <div className="border-t pt-6">
-                <div className="flex justify-between text-xl font-bold mb-6"><span>總金額</span><span className="text-orange-600">${calculateTotal()}</span></div>
-                <Button className="w-full h-12 text-lg" onClick={handlePlaceOrder}>確認訂購</Button>
-              </div>
-            </div>
-          </div>
-        </div>
-       );
-    }
-    return (
-      <div className="min-h-screen bg-gray-50">
-        {renderStoreHeader()}
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <h2 className="text-2xl font-bold mb-6">我的購物車</h2>
-          {cart.length === 0 ? <div className="text-center py-20 bg-white rounded-xl shadow-sm"><p className="text-gray-500 mb-4">購物車是空的</p><Button onClick={()=>setView('store')}>去逛逛</Button></div> : (
-            <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-              {cart.map(item => (
-                <div key={item.id} className="flex items-center p-4 border-b">
-                  <div className="w-20 h-20 bg-gray-100 rounded mr-4 overflow-hidden"><img src={item.image} className="w-full h-full object-cover"/></div>
-                  <div className="flex-1">
-                    <h3 className="font-bold">{item.name}</h3>
-                    <div className="flex gap-2 items-baseline">
-                      <p className="text-orange-600">${item.finalPrice}</p>
-                      {item.finalPrice < item.price && <p className="text-xs text-gray-400 line-through">${item.price}</p>}
+                        <h4 class="font-bold mt-6 mb-2">歷史訂單</h4>
+                        <div id="profile-orders" class="space-y-3">
+                            <!-- Order History -->
+                        </div>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-3 mr-6">
-                    <button onClick={() => updateCartQty(item.id, -1)} className="w-8 h-8 rounded-full bg-gray-100">-</button>
-                    <span>{item.qty}</span>
-                    <button onClick={() => updateCartQty(item.id, 1)} className="w-8 h-8 rounded-full bg-gray-100">+</button>
-                  </div>
-                  <button onClick={() => removeFromCart(item.id)} className="text-gray-400 hover:text-red-500"><Trash2 size={20}/></button>
                 </div>
-              ))}
-              <div className="p-6 flex justify-between items-center"><span className="text-xl font-bold">總計 ${calculateTotal()}</span><Button onClick={()=>setCartStep('checkout')}>前往結帳</Button></div>
-            </div>
-          )}
-        </main>
-      </div>
-    );
-  };
+            </section>
 
-  const renderUserProfile = () => {
-    const myOrders = orders.filter(o => o.userId === user.id).sort((a,b) => b.timestamp - a.timestamp);
-    const myNotifications = userNotifications.filter(n => n.userId === user.id);
-    const myMessages = chatMessages.filter(m => m.userId === user.id);
-
-    const handleSendMsg = () => {
-      if(!msgInput.trim()) return;
-      sendChatMessage(user.id, 'user', msgInput);
-      setMsgInput('');
-    };
-
-    return (
-      <div className="min-h-screen bg-gray-50 pb-20">
-        {renderStoreHeader()}
-        <main className="max-w-4xl mx-auto px-4 py-8">
-          <h2 className="text-2xl font-bold mb-6 flex items-center gap-2"><User className="text-blue-600"/> 會員中心</h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="bg-white p-6 rounded-xl shadow-sm h-fit">
-              <div className="flex flex-col items-center mb-6">
-                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center text-blue-600 text-2xl font-bold mb-3">{user.name[0]}</div>
-                <h3 className="text-xl font-bold">{user.name}</h3>
-                <span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs mt-1">{user.level}</span>
-              </div>
-              <div className="space-y-2 text-sm text-gray-600">
-                <p><strong>ID:</strong> {user.id}</p>
-                <p><strong>電話:</strong> {user.phone}</p>
-                <p><strong>地址:</strong> {user.address}</p>
-              </div>
-            </div>
-            <div className="md:col-span-2 space-y-6">
-              <div className="bg-white p-6 rounded-xl shadow-sm">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><Bell size={20} className="text-yellow-500"/> 通知訊息</h3>
-                {myNotifications.length === 0 ? <p className="text-gray-400 text-sm">暫無通知</p> : (
-                  <div className="space-y-3 max-h-48 overflow-y-auto">
-                    {myNotifications.map(n => (
-                      <div key={n.id} className="p-3 bg-yellow-50 rounded-lg text-sm border-l-4 border-yellow-400">
-                        <div className="flex justify-between mb-1"><span className="font-bold text-gray-800">{n.title}</span><span className="text-xs text-gray-400">{n.time}</span></div>
-                        <p className="text-gray-600">{n.content}</p>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm">
-                <h3 className="font-bold text-lg mb-4 flex items-center gap-2"><MessageSquare size={20} className="text-blue-500"/> 與管理員留言</h3>
-                <div className="bg-gray-50 rounded-lg p-4 h-64 overflow-y-auto mb-4 flex flex-col gap-3">
-                  {myMessages.length === 0 && <p className="text-center text-gray-400 text-sm mt-10">尚無留言，有問題可以直接詢問喔！</p>}
-                  {myMessages.map(m => (
-                    <div key={m.id} className={`max-w-[80%] p-3 rounded-lg text-sm ${m.sender === 'user' ? 'bg-blue-600 text-white self-end' : 'bg-white border border-gray-200 self-start'}`}>
-                      <p>{m.content}</p>
-                      <span className={`text-xs block mt-1 ${m.sender === 'user' ? 'text-blue-200' : 'text-gray-400'}`}>{m.timestamp}</span>
+            <!-- ADMIN DASHBOARD -->
+            <section id="view-admin" class="hide">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-800">後台管理系統</h2>
+                    <div class="space-x-2 flex items-center">
+                         <button onclick="router('shop')" class="bg-indigo-600 text-white px-4 py-2 rounded text-sm hover:bg-indigo-700 shadow flex items-center gap-2">
+                             <i class="fas fa-store"></i> 切換至前台購物
+                         </button>
+                         <span class="text-gray-300">|</span>
+                         <button onclick="exportData()" class="bg-green-600 text-white px-3 py-1 rounded text-sm"><i class="fas fa-download"></i> 匯出</button>
+                         <button onclick="document.getElementById('import-file').click()" class="bg-blue-600 text-white px-3 py-1 rounded text-sm"><i class="fas fa-upload"></i> 匯入</button>
+                         <input type="file" id="import-file" class="hidden" onchange="importData(this)">
                     </div>
-                  ))}
-                  <div ref={messagesEndRef} />
                 </div>
-                <div className="flex gap-2">
-                  <input 
-                    className="flex-1 border rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-500" 
-                    placeholder="輸入訊息..." 
-                    value={msgInput} 
-                    onChange={e => setMsgInput(e.target.value)} 
-                    onKeyDown={e => {
-                      if (e.key === 'Enter' && !e.nativeEvent.isComposing) {
-                        handleSendMsg();
-                      }
-                    }}
-                  />
-                  <Button onClick={handleSendMsg} size="sm">發送</Button>
+
+                <!-- Admin Tabs -->
+                <div class="flex gap-1 mb-4 border-b overflow-x-auto">
+                    <button class="px-4 py-2 bg-gray-200 rounded-t active-tab whitespace-nowrap" onclick="switchAdminTab('orders', this)">訂單管理</button>
+                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap" onclick="switchAdminTab('products', this)">商品管理</button>
+                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap" onclick="switchAdminTab('users', this)">會員管理</button>
+                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap" onclick="switchAdminTab('messages', this)">訊息中心 <span id="admin-msg-badge" class="hide bg-red-500 text-white text-[10px] px-1 rounded-full">New</span></button>
                 </div>
-              </div>
-              <div className="bg-white p-6 rounded-xl shadow-sm">
-                <h3 className="font-bold text-lg mb-4">歷史訂單</h3>
-                {myOrders.map(o => (
-                  <div key={o.id} className="border-b py-3 last:border-0">
-                    <div className="flex justify-between mb-2">
-                      <span className="font-bold">{o.id}</span>
-                      <span className={`text-xs px-2 py-1 rounded ${o.status==='pending_verification'?'bg-yellow-100 text-yellow-800':'bg-green-100 text-green-800'}`}>{o.status==='pending_verification'?'審核中':o.status === 'established' ? '訂單成立' : o.status}</span>
+
+                <!-- Admin Content -->
+                <div id="admin-content-orders" class="admin-tab-content">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <h3 class="font-bold mb-2 text-yellow-600">待核對訂單</h3>
+                            <div id="admin-orders-pending" class="space-y-3"></div>
+                        </div>
+                        <div>
+                            <h3 class="font-bold mb-2 text-green-600">已成立訂單 (按時間)</h3>
+                            <div id="admin-orders-confirmed" class="space-y-3"></div>
+                        </div>
                     </div>
-                    <div className="text-sm text-gray-500 flex justify-between"><span>{o.date}</span><span className="font-bold text-gray-800">${o.total}</span></div>
-                    {o.adminNote && <div className="mt-2 bg-blue-50 text-blue-800 text-xs p-2 rounded">備註: {o.adminNote}</div>}
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </main>
-      </div>
-    );
-  };
-
-  const renderAdminDashboard = () => {
-    const sortedOrders = [...orders].sort((a, b) => b.timestamp - a.timestamp);
-    const pendingOrders = sortedOrders.filter(o => o.status === 'pending_verification');
-    const establishedOrders = sortedOrders.filter(o => o.status === 'established' || o.status === 'awaiting_payment');
-    const messageUsers = Array.from(new Set(chatMessages.map(m => m.userId)));
-
-    return (
-      <div className="min-h-screen bg-gray-100 flex flex-col md:flex-row">
-        <aside className="bg-slate-800 text-white w-full md:w-64 flex-shrink-0">
-          <div className="p-6 font-bold text-2xl border-b border-slate-700">JC 後台</div>
-          <nav className="p-4 space-y-2">
-            <button onClick={() => setView('store')} className="w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white mb-6"><Store size={20}/> 前往商店</button>
-            {[
-              { id: 'orders', icon: CheckCircle, label: '訂單管理' },
-              { id: 'members', icon: User, label: '會員管理' },
-              { id: 'messages', icon: MessageSquare, label: '客服留言' },
-              { id: 'products', icon: Package, label: '商品管理' },
-              { id: 'backup', icon: Settings, label: '資料庫備份' },
-            ].map(item => (
-              <button key={item.id} onClick={() => setAdminTab(item.id)} className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${adminTab===item.id?'bg-slate-700':'hover:bg-slate-700'}`}><item.icon size={20}/>{item.label}</button>
-            ))}
-            <button onClick={handleLogout} className="w-full flex items-center gap-3 px-4 py-3 mt-8 hover:bg-slate-700"><LogOut size={20}/> 登出</button>
-          </nav>
-        </aside>
-
-        <main className="flex-1 p-8 overflow-y-auto">
-          {/* 訂單管理區塊 */}
-          {adminTab === 'orders' && (
-             <div className="space-y-8">
-              {/* 批次操作區 */}
-              <div className="bg-white p-4 rounded-lg shadow flex items-center justify-between sticky top-0 z-10 border-l-4 border-blue-600">
-                <div className="flex items-center gap-4">
-                  <span className="font-bold text-gray-700">已選取 {selectedOrderIds.length} 筆訂單</span>
-                  {selectedOrderIds.length > 0 && <button onClick={() => setSelectedOrderIds([])} className="text-sm text-red-500 hover:underline">清除選取</button>}
                 </div>
-                <div className="flex gap-2">
-                  <Button size="sm" onClick={handleBatchPrint} disabled={selectedOrderIds.length === 0} variant="outline"><Printer size={16}/> 批次列印</Button>
-                  <Button size="sm" onClick={handleBatchExcel} disabled={selectedOrderIds.length === 0} variant="outline" className="border-green-600 text-green-600 hover:bg-green-50"><FileSpreadsheet size={16}/> 匯出 Excel</Button>
-                </div>
-              </div>
-              <div>
-                 <div className="flex justify-between items-center mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-yellow-700"><Clock size={24}/> 待核對訂單 ({pendingOrders.length})</h3><Button size="sm" variant="secondary" onClick={() => toggleSelectAll(pendingOrders)}>全選/取消</Button></div>
-                 {pendingOrders.length === 0 ? <p className="text-gray-400 bg-white p-4 rounded text-center">無待核對訂單</p> : pendingOrders.map(order => (
-                   <OrderCard 
-                     key={order.id} 
-                     order={order} 
-                     isPending={true} 
-                     isSelected={selectedOrderIds.includes(order.id)}
-                     onToggleSelect={toggleOrderSelection}
-                     onReview={openOrderReview}
-                     onPrint={printOrders}
-                     onOpenChat={(uid) => setActiveChatUser(uid)} // 改用開啟視窗
-                   />
-                 ))}
-              </div>
-              <div>
-                 <div className="flex justify-between items-center mb-4"><h3 className="text-xl font-bold flex items-center gap-2 text-green-700"><CheckCircle size={24}/> 訂單成立 ({establishedOrders.length})</h3><Button size="sm" variant="secondary" onClick={() => toggleSelectAll(establishedOrders)}>全選/取消</Button></div>
-                 {establishedOrders.length === 0 ? <p className="text-gray-400 bg-white p-4 rounded text-center">尚無成立訂單</p> : establishedOrders.map(order => (
-                   <OrderCard 
-                     key={order.id} 
-                     order={order} 
-                     isPending={false} 
-                     isSelected={selectedOrderIds.includes(order.id)}
-                     onToggleSelect={toggleOrderSelection}
-                     onReview={openOrderReview}
-                     onPrint={printOrders}
-                     onOpenChat={(uid) => setActiveChatUser(uid)} // 改用開啟視窗
-                   />
-                 ))}
-              </div>
-            </div>
-          )}
 
-          {/* 訂單審核 Modal */}
-          {isOrderReviewModalOpen && reviewingOrder && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-              <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto flex flex-col">
-                <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-                  <h3 className="text-xl font-bold text-gray-800">訂單審核: {reviewingOrder.id}</h3>
-                  <button onClick={() => setIsOrderReviewModalOpen(false)}><X size={24}/></button>
-                </div>
-                <div className="p-6 space-y-6 flex-1 overflow-y-auto">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <p className="font-bold">{reviewingOrder.userName}</p>
-                    <p className="text-sm">{reviewingOrder.delivery.method === 'pickup' ? '門市自取' : `宅配: ${reviewingOrder.delivery.address}`}</p>
-                  </div>
-                  <table className="w-full text-left text-sm">
-                    <thead><tr><th>商品</th><th>數量</th><th>原價</th><th>最終價(可修)</th><th>小計</th></tr></thead>
-                    <tbody>
-                      {reviewingOrder.items.map((item, idx) => (
-                        <tr key={idx} className="border-t">
-                          <td className="p-2">{item.name}</td>
-                          <td className="p-2 text-center">{item.qty}</td>
-                          <td className="p-2 text-gray-400">${item.originalPrice}</td>
-                          <td className="p-2"><input type="number" className="w-20 border rounded px-1" value={item.finalPrice} onChange={(e) => updateOrderItemPrice(idx, e.target.value)}/></td>
-                          <td className="p-2 font-bold">${item.finalPrice * item.qty}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                    <tfoot><tr><td colSpan="4" className="text-right font-bold p-2">總金額</td><td className="font-bold text-lg text-red-600">${reviewingOrder.total}</td></tr></tfoot>
-                  </table>
-                </div>
-                <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
-                  <Button variant="secondary" onClick={() => setIsOrderReviewModalOpen(false)}>取消</Button>
-                  <Button onClick={confirmOrderReview} className="bg-green-600 hover:bg-green-700">確認核對</Button>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* 訊息管理區塊 */}
-          {adminTab === 'messages' && (
-            <div>
-              <h3 className="text-xl font-bold mb-6">會員留言管理</h3>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {messageUsers.map(uid => {
-                  const memberInfo = members.find(m => m.id === uid) || { name: 'Unknown', id: uid };
-                  return (
-                    <div key={uid} className="bg-white p-4 rounded-lg shadow hover:shadow-md cursor-pointer" onClick={() => setActiveChatUser(uid)}>
-                      <span className="font-bold text-lg">{memberInfo.name}</span>
-                      <p className="text-sm text-gray-500">點擊查看對話</p>
+                <div id="admin-content-products" class="admin-tab-content hide">
+                    <div class="mb-4 bg-white p-4 rounded shadow">
+                        <h4 class="font-bold mb-2">新增/修改商品</h4>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <input type="text" id="prod-name" placeholder="商品名稱" class="border p-2 rounded">
+                            <input type="number" id="prod-price" placeholder="價格" class="border p-2 rounded">
+                            <input type="text" id="prod-cat" placeholder="分類 (例: 3C)" class="border p-2 rounded">
+                            <input type="text" id="prod-img" placeholder="圖片網址" class="border p-2 rounded">
+                        </div>
+                        <button onclick="saveProduct()" class="mt-2 bg-pink-600 text-white px-4 py-2 rounded">儲存商品</button>
+                        <button onclick="resetProductForm()" class="mt-2 bg-gray-400 text-white px-4 py-2 rounded">重設</button>
                     </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* 聊天室 Modal */}
-          {activeChatUser && (
-            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50 p-4">
-                <div className="bg-white rounded-xl w-full max-w-md h-[500px] flex flex-col">
-                    <div className="p-4 border-b flex justify-between items-center bg-gray-50">
-                        <h3 className="font-bold">與 {members.find(m => m.id === activeChatUser)?.name} 對話</h3>
-                        <button onClick={() => setActiveChatUser(null)}><X size={20}/></button>
+                    <div class="overflow-x-auto">
+                        <table class="w-full bg-white shadow rounded text-sm text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">ID</th>
+                                    <th class="p-3">圖片</th>
+                                    <th class="p-3">名稱</th>
+                                    <th class="p-3">分類</th>
+                                    <th class="p-3">價格</th>
+                                    <th class="p-3">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-product-list"></tbody>
+                        </table>
                     </div>
-                    <div className="flex-1 p-4 overflow-y-auto bg-gray-50 space-y-3">
-                        {chatMessages.filter(m => m.userId === activeChatUser).map(m => (
-                            <div key={m.id} className={`max-w-[80%] p-3 rounded-lg text-sm ${m.sender === 'admin' ? 'bg-blue-600 text-white self-end' : 'bg-white border self-start'}`}>
-                                <p>{m.content}</p>
-                                <span className="text-xs opacity-70 block mt-1">{m.timestamp}</span>
+                </div>
+
+                <div id="admin-content-users" class="admin-tab-content hide">
+                    <div class="overflow-x-auto">
+                        <table class="w-full bg-white shadow rounded text-sm text-left">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="p-3">帳號 (ID)</th>
+                                    <th class="p-3">資料</th>
+                                    <th class="p-3">狀態</th>
+                                    <th class="p-3">等級</th>
+                                    <th class="p-3">操作</th>
+                                </tr>
+                            </thead>
+                            <tbody id="admin-user-list"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="admin-content-messages" class="admin-tab-content hide">
+                    <div class="grid md:grid-cols-3 gap-4 h-[600px]">
+                        <!-- Message List -->
+                        <div class="md:col-span-1 bg-white shadow rounded overflow-y-auto" id="admin-msg-list">
+                            <!-- List of users who messaged -->
+                        </div>
+                        <!-- Chat View -->
+                        <div class="md:col-span-2 bg-white shadow rounded flex flex-col">
+                            <div id="admin-chat-header" class="p-3 border-b font-bold bg-gray-50">
+                                請選擇對話
                             </div>
-                        ))}
-                        <div ref={messagesEndRef} />
+                            <div id="admin-chat-box" class="flex-grow p-4 overflow-y-auto bg-gray-50 space-y-3"></div>
+                            <div class="p-3 border-t flex gap-2">
+                                <input type="text" id="admin-chat-input" class="flex-grow border rounded p-2" placeholder="輸入回覆..." disabled>
+                                <button onclick="adminSendMsg()" id="admin-chat-send-btn" class="bg-blue-600 text-white px-4 rounded disabled:bg-gray-400" disabled>發送</button>
+                            </div>
+                        </div>
                     </div>
-                    <div className="p-4 border-t flex gap-2">
-                        <input className="flex-1 border rounded px-3 py-2" placeholder="輸入回覆..." value={msgInput} onChange={e => setMsgInput(e.target.value)} 
-                            onKeyDown={e => { if (e.key === 'Enter' && !e.nativeEvent.isComposing && msgInput.trim()) { sendChatMessage(activeChatUser, 'admin', msgInput); setMsgInput(''); }}}/>
-                        <Button onClick={() => { if(msgInput.trim()) { sendChatMessage(activeChatUser, 'admin', msgInput); setMsgInput(''); }}}>發送</Button>
-                    </div>
                 </div>
-            </div>
-          )}
-
-          {/* 會員管理區塊 */}
-          {adminTab === 'members' && (
-            <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold">會員管理</h3>
-                <div className="flex gap-2">
-                  <Button variant="outline" onClick={() => setIsLevelModalOpen(true)}><Crown size={18}/> 等級折扣設定</Button>
-                  <Button onClick={() => { setEditingMember(null); setIsMemberModalOpen(true); }}><Plus size={18}/> 新增會員</Button>
-                </div>
-              </div>
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50"><tr><th className="p-4">ID</th><th className="p-4">姓名</th><th className="p-4">等級</th><th className="p-4">狀態</th><th className="p-4">操作</th></tr></thead>
-                  <tbody>
-                    {members.map(m => (
-                      <tr key={m.id} className="border-t">
-                        <td className="p-4 font-mono">{m.id}</td>
-                        <td className="p-4">{m.name}</td>
-                        <td className="p-4"><span className="bg-purple-100 text-purple-800 px-2 py-1 rounded text-xs font-bold">{m.level}</span></td>
-                        <td className="p-4">{m.status}</td>
-                        <td className="p-4 flex gap-2">
-                           <button onClick={() => { setEditingMember(m); setIsMemberModalOpen(true); }} className="text-blue-600"><Edit size={18}/></button>
-                           <button onClick={() => deleteMember(m.id)} className="text-red-500"><Trash2 size={18}/></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {isMemberModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                    <h3 className="text-xl font-bold mb-4">{editingMember ? '編輯會員' : '新增會員'}</h3>
-                    <form onSubmit={saveMember} className="space-y-4">
-                      {editingMember ? (
-                        <div className="bg-gray-50 p-3 rounded text-sm text-gray-600">ID: {editingMember.id} <input type="hidden" name="id" value={editingMember.id} /></div>
-                      ) : (
-                        <Input name="id" label="會員ID (身分證)" required placeholder="A123456789"/>
-                      )}
-                      <Input name="name" label="姓名" defaultValue={editingMember?.name} required />
-                      <Input name="password" label="密碼" defaultValue={editingMember?.password} required />
-                      <div className="mb-3">
-                         <label className="block text-sm font-medium text-gray-700 mb-1">會員等級</label>
-                         <select name="level" className="w-full px-3 py-2 border rounded-lg" defaultValue={editingMember?.level || memberLevels[0].name}>
-                           {memberLevels.map(lvl => <option key={lvl.name} value={lvl.name}>{lvl.name}</option>)}
-                         </select>
-                      </div>
-                      <div className="mb-3">
-                         <label className="block text-sm font-medium text-gray-700 mb-1">狀態</label>
-                         <select name="status" className="w-full px-3 py-2 border rounded-lg" defaultValue={editingMember?.status || 'active'}>
-                           <option value="active">正常 (Active)</option>
-                           <option value="pending">待審核 (Pending)</option>
-                         </select>
-                      </div>
-                      <Input name="phone" label="電話" defaultValue={editingMember?.phone} />
-                      <Input name="address" label="地址" defaultValue={editingMember?.address} />
-                      <div className="flex gap-4 mt-6">
-                        <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsMemberModalOpen(false)}>取消</Button>
-                        <Button type="submit" className="flex-1">儲存</Button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-              {isLevelModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-lg p-6 w-full max-w-md">
-                    <h3 className="text-xl font-bold mb-4 flex items-center gap-2"><Crown size={24} className="text-yellow-500"/> 會員等級折扣設定</h3>
-                    <form onSubmit={saveMemberLevels} className="space-y-4">
-                      {memberLevels.map((lvl, idx) => (
-                        <div key={idx} className="flex gap-4 items-center bg-gray-50 p-3 rounded">
-                          <div className="flex-1"><input name={`name_${idx}`} defaultValue={lvl.name} className="w-full bg-transparent font-bold outline-none" /></div>
-                          <div className="w-24"><input name={`discount_${idx}`} type="number" defaultValue={lvl.discount} className="w-full border rounded px-2 py-1" min="0" max="100"/></div>
-                        </div>
-                      ))}
-                      <div className="flex gap-4 mt-6">
-                        <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsLevelModalOpen(false)}>取消</Button>
-                        <Button type="submit" className="flex-1">儲存設定</Button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* 商品管理區塊 */}
-          {adminTab === 'products' && (
-             <div>
-              <div className="flex justify-between items-center mb-6">
-                <h3 className="text-xl font-bold">商品管理</h3>
-                <Button onClick={() => { setEditingProduct(null); setIsProductModalOpen(true); }}><Plus size={18} /> 新增商品</Button>
-              </div>
-              <div className="bg-white rounded-lg shadow overflow-hidden">
-                <table className="w-full text-left text-sm">
-                  <thead className="bg-gray-50"><tr><th className="p-3">名稱</th><th className="p-3 text-right">售價</th><th className="p-3 text-center">狀態</th><th className="p-3 text-center">操作</th></tr></thead>
-                  <tbody>
-                    {products.map(p => (
-                      <tr key={p.id} className="border-t hover:bg-gray-50">
-                        <td className="p-3 max-w-xs truncate">{p.name}</td>
-                        <td className="p-3 text-right font-bold text-orange-600 font-mono">${p.price}</td>
-                        <td className="p-3 text-center">
-                          {p.noMemberDiscount && <span className="bg-red-100 text-red-600 px-2 py-1 rounded text-xs font-bold">特價品</span>}
-                          {p.discount > 0 && <span className="bg-blue-100 text-blue-600 px-2 py-1 rounded text-xs ml-1">-{p.discount}%</span>}
-                        </td>
-                        <td className="p-3 text-center flex justify-center gap-2">
-                          <button onClick={() => { setEditingProduct(p); setIsProductModalOpen(true); }} className="text-blue-600"><Edit size={18}/></button>
-                          <button onClick={() => deleteProduct(p.id)} className="text-red-500"><Trash2 size={18}/></button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-              {isProductModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-white rounded-lg p-6 w-full max-w-lg h-[90vh] overflow-y-auto">
-                    <h3 className="text-xl font-bold mb-4">{editingProduct ? '編輯商品' : '新增商品'}</h3>
-                    <form onSubmit={saveProduct} className="space-y-4">
-                      <Input name="name" label="商品名稱" defaultValue={editingProduct?.name} required />
-                      <div className="bg-yellow-50 p-4 rounded border border-yellow-200 space-y-3">
-                        <h4 className="font-bold text-yellow-800 text-sm flex items-center gap-2"><Tag size={16}/> 價格與折扣設定</h4>
-                        <div className="grid grid-cols-2 gap-4">
-                          <Input name="price" label="售價" type="number" defaultValue={editingProduct?.price} required />
-                          <Input name="discount" label="商品折扣 (%)" type="number" defaultValue={editingProduct?.discount || 0} />
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <input type="checkbox" name="noMemberDiscount" id="noMemberDiscount" defaultChecked={editingProduct?.noMemberDiscount} className="w-5 h-5 text-blue-600"/>
-                          <label htmlFor="noMemberDiscount" className="text-sm font-bold text-red-600 cursor-pointer">此為特價商品 (不適用會員折扣)</label>
-                        </div>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4">
-                        <Input name="stock" label="庫存" type="number" defaultValue={editingProduct?.stock} required />
-                        <div className="mb-3">
-                           <label className="block text-sm font-medium text-gray-700 mb-1">分類</label>
-                           <select name="category" className="w-full px-3 py-2 border rounded-lg" defaultValue={editingProduct?.category || categories[1]}>
-                             {categories.filter(c => c !== '全部').map(c => <option key={c} value={c}>{c}</option>)}
-                           </select>
-                        </div>
-                      </div>
-                      <Input name="image" label="圖片網址" defaultValue={editingProduct?.image} />
-                      <Input name="description" label="商品描述" defaultValue={editingProduct?.description} />
-                      <div className="flex gap-4 mt-6">
-                        <Button type="button" variant="secondary" className="flex-1" onClick={() => setIsProductModalOpen(false)}>取消</Button>
-                        <Button type="submit" className="flex-1">儲存</Button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
-
-          {adminTab === 'backup' && (
-             <div className="bg-white p-6 rounded shadow">
-               <h4 className="font-bold mb-4">資料備份</h4>
-               <Button onClick={exportData} className="mr-4">匯出 JSON</Button>
-               <Button variant="outline" onClick={() => fileInputRef.current.click()}>匯入 JSON</Button>
-               <input type="file" ref={fileInputRef} className="hidden" onChange={importData} accept=".json"/>
-             </div>
-          )}
+            </section>
         </main>
-      </div>
-    );
-  };
+    </div>
 
-  if (view === 'login') return renderLoginView();
-  if (user?.role === 'admin' && view === 'admin') return renderAdminDashboard();
-  if (view === 'store') return renderStoreView();
-  if (view === 'userProfile') return renderUserProfile();
-  if (view === 'productDetail') return renderProductDetail();
-  if (view === 'cart') return renderCart();
-  
-  return <div>Loading...</div>;
-}
+    <!-- MODALS -->
+    <!-- Order Review Modal (Admin) -->
+    <div id="modal-order-review" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 class="text-xl font-bold mb-4">訂單核對 & 價格調整</h3>
+            <div id="order-review-items" class="space-y-2 mb-4"></div>
+            <div class="flex justify-between items-center bg-gray-100 p-3 rounded mb-4">
+                 <span>原始總額: $<span id="review-original-total">0</span></span>
+                 <span class="font-bold text-pink-600 text-lg">調整後總額: $<span id="review-final-total">0</span></span>
+            </div>
+            
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-1">給會員的留言/通知</label>
+                <textarea id="review-msg" class="w-full border p-2 rounded h-20" placeholder="例：商品確認無誤，請匯款至..."></textarea>
+            </div>
+
+            <div class="flex justify-end gap-2">
+                <button onclick="closeModal('modal-order-review')" class="bg-gray-300 px-4 py-2 rounded">取消</button>
+                <button onclick="confirmOrderAction()" class="bg-green-600 text-white px-4 py-2 rounded">確認訂單並通知</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Detail Modal -->
+    <div id="modal-product" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-md relative">
+            <button onclick="closeModal('modal-product')" class="absolute top-2 right-2 text-gray-500 hover:text-black"><i class="fas fa-times"></i></button>
+            <img id="modal-p-img" src="" class="w-full h-48 object-cover rounded mb-4">
+            <span id="modal-p-cat" class="text-xs bg-gray-200 px-2 py-1 rounded text-gray-600"></span>
+            <h3 id="modal-p-name" class="text-xl font-bold mt-2"></h3>
+            <div class="flex justify-between items-end mt-2 mb-4">
+                <div>
+                    <span class="text-gray-400 line-through text-sm">原價 $<span id="modal-p-price"></span></span>
+                    <br>
+                    <span class="text-2xl font-bold text-pink-600">$<span id="modal-p-disc-price"></span></span>
+                    <span class="text-xs text-red-500 ml-1" id="modal-p-discount-tag"></span>
+                </div>
+            </div>
+            <button id="btn-add-to-cart" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">加入購物車</button>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA & STATE ---
+        const DB_KEYS = {
+            USERS: 'jc_users',
+            PRODUCTS: 'jc_products',
+            ORDERS: 'jc_orders',
+            MESSAGES: 'jc_messages',
+            CURRENT_USER: 'jc_current_user'
+        };
+
+        // Initial Data Seeding
+        const initialProducts = [
+            { id: 1, name: "Apple iPhone 15 Pro", price: 36900, category: "3C", img: "https://placehold.co/400x400/333/FFF?text=iPhone+15" },
+            { id: 2, name: "Dyson 吹風機", price: 12900, category: "家電", img: "https://placehold.co/400x400/pink/FFF?text=Dyson" },
+            { id: 3, name: "SK-II 青春露", price: 4500, category: "美妝", img: "https://placehold.co/400x400/red/FFF?text=SK-II" },
+            { id: 4, name: "Nike 慢跑鞋", price: 2800, category: "運動", img: "https://placehold.co/400x400/orange/FFF?text=Nike" },
+            { id: 5, name: "Sony WH-1000XM5", price: 9900, category: "3C", img: "https://placehold.co/400x400/black/FFF?text=Sony" },
+            { id: 6, name: "衛生紙一箱", price: 899, category: "日用", img: "https://placehold.co/400x400/white/333?text=Tissue" }
+        ];
+
+        let currentUser = null;
+        let cart = [];
+        let editingProductId = null;
+        let reviewingOrder = null;
+        let adminChatTarget = null; 
+        let tempRegisterAuth = null; // Store temp credentials for registration
+
+        // --- INIT ---
+        window.onload = function() {
+            if(!localStorage.getItem(DB_KEYS.USERS)) {
+                // Seed Admin
+                const admin = { id: 'admin', pass: 'admin', role: 'admin', name: '管理員', status: 'active', level: 1 };
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify([admin]));
+            }
+            if(!localStorage.getItem(DB_KEYS.PRODUCTS)) {
+                localStorage.setItem(DB_KEYS.PRODUCTS, JSON.stringify(initialProducts));
+            }
+            if(!localStorage.getItem(DB_KEYS.ORDERS)) localStorage.setItem(DB_KEYS.ORDERS, JSON.stringify([]));
+            if(!localStorage.getItem(DB_KEYS.MESSAGES)) localStorage.setItem(DB_KEYS.MESSAGES, JSON.stringify([]));
+
+            checkSession();
+        };
+
+        // --- AUTH SYSTEM ---
+        function checkSession() {
+            const stored = sessionStorage.getItem(DB_KEYS.CURRENT_USER);
+            if (stored) {
+                currentUser = JSON.parse(stored);
+                initApp();
+            } else {
+                document.getElementById('page-login').classList.remove('hide');
+                document.getElementById('app-layout').classList.add('hide');
+                document.getElementById('view-register').classList.add('hide');
+            }
+        }
+
+        function handleLogin() {
+            const userIn = document.getElementById('login-username').value.trim();
+            const passIn = document.getElementById('login-password').value.trim();
+            
+            if(!userIn || !passIn) return toast('請輸入帳號密碼', 'error');
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const user = users.find(u => u.id === userIn);
+
+            if (user) {
+                // Existing user
+                if (user.pass === passIn) {
+                    // Check Status
+                    if (user.status === 'pending') {
+                        toast('帳號審核中，請等待管理員通知', 'warning');
+                        return;
+                    }
+                    // Login
+                    loginSuccess(user);
+                } else {
+                    toast('密碼錯誤', 'error');
+                }
+            } else {
+                // New User -> Redirect to Register View
+                // Validate ID format (Simple Check: Start with Letter, length 10)
+                const idRegex = /^[A-Z][0-9]{9}$/;
+                if (!idRegex.test(userIn)) return toast('帳號格式錯誤，請輸入身分證字號', 'error');
+
+                // Validate Password format (Last 4 ID + 6 date digits = 10 digits)
+                const last4Id = userIn.slice(-4);
+                const passRegex = new RegExp(`^${last4Id}\\d{6}$`);
+                
+                if (!passRegex.test(passIn)) {
+                    return toast('首次登入密碼格式錯誤 (身分證後4碼+生日6碼)', 'error');
+                }
+
+                // Prepare Registration View
+                tempRegisterAuth = { id: userIn, pass: passIn };
+                
+                // Extract birthday from password (last 6 digits: YYMMDD)
+                const rawDate = passIn.slice(-6); // e.g., 990101
+                const formattedBirthday = `${rawDate.substring(0,2)}/${rawDate.substring(2,4)}/${rawDate.substring(4,6)}`;
+
+                document.getElementById('reg-id').value = userIn;
+                document.getElementById('reg-birthday').value = `19${formattedBirthday}`; // Simplified assumption for demo
+                document.getElementById('reg-name').value = '';
+                document.getElementById('reg-phone').value = '';
+                
+                document.getElementById('page-login').classList.add('hide');
+                document.getElementById('view-register').classList.remove('hide');
+                
+                toast('驗證成功，請填寫詳細資料以完成註冊', 'info');
+            }
+        }
+
+        function submitRegistration() {
+            const name = document.getElementById('reg-name').value.trim();
+            const gender = document.getElementById('reg-gender').value;
+            const phone = document.getElementById('reg-phone').value.trim();
+            const birthday = document.getElementById('reg-birthday').value;
+
+            if(!name || !phone) return toast('請填寫完整姓名與電話', 'error');
+            if(!tempRegisterAuth) return toast('驗證失效，請重新登入', 'error');
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            
+            // Double check duplicate
+            if(users.some(u => u.id === tempRegisterAuth.id)) {
+                toast('此帳號已存在', 'error');
+                cancelRegistration();
+                return;
+            }
+
+            // Create Pending User
+            const newUser = {
+                id: tempRegisterAuth.id,
+                pass: tempRegisterAuth.pass,
+                role: 'user',
+                name: name,
+                gender: gender,
+                phone: phone,
+                birthday: birthday,
+                status: 'pending',
+                level: 0, 
+                joined: new Date().toISOString()
+            };
+            
+            users.push(newUser);
+            localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+            
+            // Notify Admin
+            addMessage('system', 'admin', `會員申請: ${newUser.name} (${newUser.id}) 已提交資料，待審核。`);
+            
+            // Clear and Redirect
+            tempRegisterAuth = null;
+            document.getElementById('view-register').classList.add('hide');
+            document.getElementById('page-login').classList.remove('hide');
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+
+            toast('資料已送出！請等待管理員審核通知', 'success');
+        }
+
+        function cancelRegistration() {
+            tempRegisterAuth = null;
+            document.getElementById('view-register').classList.add('hide');
+            document.getElementById('page-login').classList.remove('hide');
+        }
+
+        function loginSuccess(user) {
+            currentUser = user;
+            sessionStorage.setItem(DB_KEYS.CURRENT_USER, JSON.stringify(user));
+            document.getElementById('page-login').classList.add('hide');
+            initApp();
+        }
+
+        function logout() {
+            // FIX: Do not use location.reload() to avoid clearing local storage in preview environments
+            currentUser = null;
+            sessionStorage.removeItem(DB_KEYS.CURRENT_USER);
+            
+            // UI Reset
+            document.getElementById('app-layout').classList.add('hide');
+            document.getElementById('view-register').classList.add('hide');
+            document.getElementById('page-login').classList.remove('hide');
+            
+            // Clear inputs
+            document.getElementById('login-username').value = '';
+            document.getElementById('login-password').value = '';
+            
+            // Clear specific state
+            cart = [];
+            adminChatTarget = null;
+            
+            toast('已登出', 'info');
+        }
+
+        // --- APP LOGIC ---
+        function initApp() {
+            document.getElementById('app-layout').classList.remove('hide');
+            
+            // Setup UI based on role
+            document.getElementById('nav-welcome').innerText = `歡迎, ${currentUser.name}`;
+            
+            if (currentUser.role === 'admin') {
+                document.getElementById('btn-admin-switch').classList.remove('hide');
+                document.getElementById('nav-user').classList.add('hide'); 
+                checkAdminBadges();
+                router('admin');
+            } else {
+                document.getElementById('btn-admin-switch').classList.add('hide');
+                document.getElementById('nav-user').classList.remove('hide');
+                router('shop');
+            }
+
+            renderShop();
+            updateCartCount();
+        }
+
+        function router(viewName) {
+            // Hide all views
+            ['shop', 'cart', 'profile', 'admin'].forEach(v => document.getElementById(`view-${v}`).classList.add('hide'));
+            
+            // Show selected
+            document.getElementById(`view-${viewName}`).classList.remove('hide');
+
+            if (viewName === 'shop') renderShop();
+            if (viewName === 'cart') renderCart();
+            if (viewName === 'profile') renderProfile();
+            if (viewName === 'admin') {
+                if(currentUser.role !== 'admin') {
+                    toast('無權限', 'error');
+                    router('shop');
+                    return;
+                }
+                renderAdmin();
+            }
+        }
+
+        // --- SHOP & PRODUCTS ---
+        function renderShop() {
+            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            const grid = document.getElementById('product-grid');
+            const catList = document.getElementById('category-list');
+            
+            // Categories
+            const categories = ['全部', ...new Set(products.map(p => p.category))];
+            catList.innerHTML = categories.map(c => 
+                `<button onclick="filterShop('${c}')" class="whitespace-nowrap px-4 py-1 rounded-full bg-white border hover:bg-pink-50">${c}</button>`
+            ).join('');
+
+            // Products
+            filterShop('全部');
+        }
+
+        function filterShop(cat) {
+            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            const grid = document.getElementById('product-grid');
+            const filtered = cat === '全部' ? products : products.filter(p => p.category === cat);
+            
+            grid.innerHTML = filtered.map(p => {
+                const discount = getMemberDiscount();
+                const finalPrice = Math.floor(p.price * discount);
+                return `
+                <div class="product-card bg-white p-4 rounded shadow cursor-pointer transition" onclick="openProductModal(${p.id})">
+                    <img src="${p.img}" class="w-full h-40 object-cover rounded mb-2 bg-gray-200" onerror="this.src='https://placehold.co/400?text=No+Image'">
+                    <span class="text-xs text-gray-500">${p.category}</span>
+                    <h3 class="font-bold text-gray-800 text-sm h-10 overflow-hidden">${p.name}</h3>
+                    <div class="mt-2 flex justify-between items-center">
+                        <span class="font-bold text-pink-600">$${finalPrice}</span>
+                        ${discount < 1 ? '<span class="text-xs bg-red-100 text-red-600 px-1 rounded">會員價</span>' : ''}
+                    </div>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function getMemberDiscount() {
+            if (!currentUser) return 1;
+            // Level 0: 100%, Level 1 (VIP): 95%, Level 2: 90%
+            const level = currentUser.level || 0;
+            if (level === 1) return 0.95;
+            if (level >= 2) return 0.90;
+            return 1;
+        }
+
+        function openProductModal(pid) {
+            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            const p = products.find(i => i.id === pid);
+            if(!p) return;
+
+            const discount = getMemberDiscount();
+            const finalPrice = Math.floor(p.price * discount);
+
+            document.getElementById('modal-p-img').src = p.img;
+            document.getElementById('modal-p-cat').innerText = p.category;
+            document.getElementById('modal-p-name').innerText = p.name;
+            document.getElementById('modal-p-price').innerText = p.price;
+            document.getElementById('modal-p-disc-price').innerText = finalPrice;
+            document.getElementById('modal-p-discount-tag').innerText = discount < 1 ? `(會員專屬 ${discount*10}折)` : '';
+            
+            const btn = document.getElementById('btn-add-to-cart');
+            btn.onclick = () => addToCart(p);
+
+            document.getElementById('modal-product').classList.remove('hide');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hide');
+        }
+
+        // --- CART & ORDERS ---
+        function addToCart(product) {
+            const discount = getMemberDiscount();
+            const finalPrice = Math.floor(product.price * discount);
+            
+            const existing = cart.find(item => item.id === product.id);
+            if(existing) {
+                existing.qty++;
+            } else {
+                cart.push({ ...product, qty: 1, finalPrice: finalPrice, originalPrice: product.price });
+            }
+            
+            updateCartCount();
+            closeModal('modal-product');
+            toast('已加入購物車', 'success');
+        }
+
+        function updateCartCount() {
+            document.getElementById('cart-count').innerText = cart.reduce((acc, item) => acc + item.qty, 0);
+        }
+
+        function renderCart() {
+            const container = document.getElementById('cart-items');
+            if(cart.length === 0) {
+                container.innerHTML = '<p class="text-center text-gray-500 py-4">購物車是空的</p>';
+                document.getElementById('cart-total').innerText = '0';
+                return;
+            }
+
+            let total = 0;
+            container.innerHTML = cart.map((item, idx) => {
+                const subtotal = item.finalPrice * item.qty;
+                total += subtotal;
+                return `
+                <div class="flex justify-between items-center border-b py-2">
+                    <div class="flex items-center gap-2">
+                        <img src="${item.img}" class="w-12 h-12 rounded object-cover">
+                        <div>
+                            <p class="font-bold text-sm">${item.name}</p>
+                            <p class="text-xs text-gray-500">單價 $${item.finalPrice}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="updateCartQty(${idx}, -1)" class="bg-gray-200 w-6 h-6 rounded">-</button>
+                        <span>${item.qty}</span>
+                        <button onclick="updateCartQty(${idx}, 1)" class="bg-gray-200 w-6 h-6 rounded">+</button>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            document.getElementById('cart-total').innerText = total;
+        }
+
+        function updateCartQty(idx, change) {
+            cart[idx].qty += change;
+            if(cart[idx].qty <= 0) cart.splice(idx, 1);
+            renderCart();
+            updateCartCount();
+        }
+
+        function submitOrder() {
+            if(cart.length === 0) return toast('購物車是空的', 'error');
+
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const total = cart.reduce((acc, item) => acc + (item.finalPrice * item.qty), 0);
+            
+            const newOrder = {
+                oid: 'ORD-' + Date.now(),
+                uid: currentUser.id,
+                items: [...cart], // Clone
+                total: total,
+                status: 'pending', // pending -> checked -> confirmed
+                timestamp: new Date().toISOString(),
+                adminNote: ''
+            };
+
+            orders.push(newOrder);
+            localStorage.setItem(DB_KEYS.ORDERS, JSON.stringify(orders));
+            
+            // Notify Admin
+            addMessage('system', 'admin', `新訂單 ${newOrder.oid} 待核對 (會員: ${currentUser.name})`);
+
+            cart = [];
+            updateCartCount();
+            router('profile');
+            toast('訂單已送出，等待管理員核對', 'success');
+        }
+
+        // --- PROFILE & MESSAGES ---
+        function renderProfile() {
+            document.getElementById('profile-info').innerHTML = `
+                <p>帳號: ${currentUser.id}</p>
+                <p>姓名: ${currentUser.name}</p>
+                <p>電話: ${currentUser.phone || '無'}</p>
+                <p>等級: ${currentUser.level === 1 ? '<span class="text-yellow-600 font-bold">VIP</span>' : '一般會員'}</p>
+            `;
+
+            // Orders
+            const allOrders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const myOrders = allOrders.filter(o => o.uid === currentUser.id).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            document.getElementById('profile-orders').innerHTML = myOrders.map(o => {
+                let statusClass = 'bg-gray-200 text-gray-700';
+                let statusText = '待核對';
+                if(o.status === 'confirmed') { statusClass = 'bg-green-100 text-green-700'; statusText = '訂單成立'; }
+                
+                return `
+                <div class="border p-3 rounded">
+                    <div class="flex justify-between mb-2">
+                        <span class="font-mono font-bold">${o.oid}</span>
+                        <span class="text-xs px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                    </div>
+                    <p class="text-sm text-gray-600">總金額: $${o.total}</p>
+                    ${o.adminNote ? `<p class="text-xs bg-blue-50 p-2 mt-2 rounded text-blue-800"><i class="fas fa-info-circle"></i> ${o.adminNote}</p>` : ''}
+                </div>
+                `;
+            }).join('') || '<p class="text-gray-400 text-sm">無訂單記錄</p>';
+
+            renderChat();
+        }
+
+        function renderChat() {
+            const allMsgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
+            const chatBox = document.getElementById('chat-box');
+            const myMsgs = allMsgs.filter(m => m.from === currentUser.id || m.to === currentUser.id);
+
+            chatBox.innerHTML = myMsgs.map(m => {
+                const isMe = m.from === currentUser.id;
+                return `
+                <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] rounded p-2 text-sm ${isMe ? 'bg-blue-100' : 'bg-white border'}">
+                        <p class="font-bold text-xs text-gray-500 mb-1">${m.from}</p>
+                        <p>${m.content}</p>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        function sendMessage(role) {
+            const input = document.getElementById('chat-input');
+            const content = input.value.trim();
+            if(!content) return;
+
+            const msg = {
+                from: currentUser.id,
+                to: 'admin',
+                content: content,
+                time: new Date().toISOString()
+            };
+
+            addMessageToDB(msg);
+            input.value = '';
+            renderChat();
+        }
+
+        function addMessage(from, to, content) {
+             const msg = { from, to, content, time: new Date().toISOString() };
+             addMessageToDB(msg);
+        }
+
+        function addMessageToDB(msg) {
+            const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
+            msgs.push(msg);
+            localStorage.setItem(DB_KEYS.MESSAGES, JSON.stringify(msgs));
+        }
+
+        function updatePassword() {
+            const newPass = document.getElementById('new-password').value.trim();
+            if(!newPass) return;
+            
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if(idx !== -1) {
+                users[idx].pass = newPass;
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                currentUser.pass = newPass;
+                sessionStorage.setItem(DB_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+                toast('密碼已更新', 'success');
+                document.getElementById('new-password').value = '';
+            }
+        }
+
+        // --- ADMIN SYSTEM ---
+        function renderAdmin() {
+            // Render Pending Orders
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const pending = orders.filter(o => o.status === 'pending');
+            const confirmed = orders.filter(o => o.status === 'confirmed').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            document.getElementById('admin-orders-pending').innerHTML = pending.map(o => `
+                <div class="bg-white p-3 rounded shadow border-l-4 border-yellow-400">
+                    <div class="flex justify-between">
+                        <span class="font-bold text-sm">${o.oid}</span>
+                        <span class="text-xs text-gray-500">${new Date(o.timestamp).toLocaleString()}</span>
+                    </div>
+                    <p class="text-sm">會員: ${o.uid}</p>
+                    <p class="text-sm font-bold">目前總額: $${o.total}</p>
+                    <button onclick="openOrderReview('${o.oid}')" class="mt-2 w-full bg-yellow-500 text-white text-sm py-1 rounded hover:bg-yellow-600">核對並調整</button>
+                </div>
+            `).join('') || '無待核對訂單';
+
+            document.getElementById('admin-orders-confirmed').innerHTML = confirmed.map(o => `
+                <div class="bg-white p-3 rounded shadow border-l-4 border-green-400">
+                     <div class="flex justify-between">
+                        <span class="font-bold text-sm">${o.oid}</span>
+                        <span class="text-xs text-gray-500">${new Date(o.timestamp).toLocaleString()}</span>
+                    </div>
+                    <p class="text-sm">會員: ${o.uid} | 金額: $${o.total}</p>
+                    <div class="mt-1 flex gap-2">
+                        <input type="text" id="msg-input-${o.oid}" class="border rounded text-xs p-1 flex-grow" placeholder="給會員留言...">
+                        <button onclick="adminReplyOrder('${o.oid}', '${o.uid}')" class="bg-blue-500 text-white text-xs px-2 rounded">發送</button>
+                    </div>
+                </div>
+            `).join('');
+
+            // Products
+            renderAdminProducts();
+            // Users
+            renderAdminUsers();
+            // Messages
+            renderAdminMessages();
+            // Ensure chat box is rendered if open
+            if(adminChatTarget) renderAdminChatBox();
+        }
+
+        function checkAdminBadges() {
+            // Simple check if there are unread system messages or pending users
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const hasPending = users.some(u => u.status === 'pending');
+            
+            if(hasPending) {
+                document.getElementById('admin-msg-badge').classList.remove('hide');
+            } else {
+                document.getElementById('admin-msg-badge').classList.add('hide');
+            }
+        }
+
+        function switchAdminTab(tab, btn) {
+            document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hide'));
+            document.getElementById(`admin-content-${tab}`).classList.remove('hide');
+            
+            // UI tabs style
+            btn.parentElement.querySelectorAll('button').forEach(b => {
+                b.classList.remove('bg-gray-200');
+                b.classList.add('bg-gray-100');
+            });
+            btn.classList.remove('bg-gray-100');
+            btn.classList.add('bg-gray-200');
+        }
+
+        // Admin: Product Logic
+        function renderAdminProducts() {
+            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            document.getElementById('admin-product-list').innerHTML = products.map(p => `
+                <tr class="border-b">
+                    <td class="p-3">${p.id}</td>
+                    <td class="p-3"><img src="${p.img}" class="w-8 h-8 object-cover"></td>
+                    <td class="p-3">${p.name}</td>
+                    <td class="p-3">${p.category}</td>
+                    <td class="p-3">$${p.price}</td>
+                    <td class="p-3">
+                        <button onclick="editProduct(${p.id})" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteProduct(${p.id})" class="text-red-600"><i class="fas fa-trash"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function saveProduct() {
+            const name = document.getElementById('prod-name').value;
+            const price = document.getElementById('prod-price').value;
+            const cat = document.getElementById('prod-cat').value;
+            const img = document.getElementById('prod-img').value;
+
+            if(!name || !price) return toast('請填寫完整', 'error');
+
+            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            
+            if (editingProductId) {
+                const idx = products.findIndex(p => p.id === editingProductId);
+                if(idx !== -1) {
+                    products[idx] = { ...products[idx], name, price: Number(price), category: cat, img };
+                    toast('商品已更新', 'success');
+                }
+            } else {
+                const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
+                products.push({ id: newId, name, price: Number(price), category: cat, img });
+                toast('商品已新增', 'success');
+            }
+
+            localStorage.setItem(DB_KEYS.PRODUCTS, JSON.stringify(products));
+            resetProductForm();
+            renderAdminProducts();
+        }
+
+        function editProduct(id) {
+            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            const p = products.find(i => i.id === id);
+            if(p) {
+                editingProductId = id;
+                document.getElementById('prod-name').value = p.name;
+                document.getElementById('prod-price').value = p.price;
+                document.getElementById('prod-cat').value = p.category;
+                document.getElementById('prod-img').value = p.img;
+            }
+        }
+
+        function deleteProduct(id) {
+            if(!confirm('確定刪除?')) return;
+            let products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+            products = products.filter(p => p.id !== id);
+            localStorage.setItem(DB_KEYS.PRODUCTS, JSON.stringify(products));
+            renderAdminProducts();
+        }
+
+        function resetProductForm() {
+            editingProductId = null;
+            document.getElementById('prod-name').value = '';
+            document.getElementById('prod-price').value = '';
+            document.getElementById('prod-cat').value = '';
+            document.getElementById('prod-img').value = '';
+        }
+
+        // Admin: Users
+        function renderAdminUsers() {
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            document.getElementById('admin-user-list').innerHTML = users.map(u => `
+                <tr class="border-b">
+                    <td class="p-3">${u.id} <br><span class="text-xs text-gray-500">${u.name}</span></td>
+                    <td class="p-3 text-xs">
+                        ${u.gender === 'male' ? '男' : (u.gender === 'female' ? '女' : '其他')} / ${u.phone || '無電話'}
+                        <br>${u.birthday || ''}
+                    </td>
+                    <td class="p-3">
+                        <span class="px-2 py-1 text-xs rounded ${u.status === 'active' ? 'bg-green-100 text-green-700' : (u.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}">${u.status === 'pending' ? '待審核' : u.status}</span>
+                    </td>
+                    <td class="p-3">
+                         <select onchange="updateUserLevel('${u.id}', this.value)" class="border rounded text-sm">
+                            <option value="0" ${u.level === 0 ? 'selected' : ''}>一般</option>
+                            <option value="1" ${u.level === 1 ? 'selected' : ''}>VIP</option>
+                         </select>
+                    </td>
+                    <td class="p-3">
+                        ${u.status === 'pending' ? `<button onclick="approveUser('${u.id}')" class="bg-green-500 text-white text-xs px-2 py-1 rounded">審核通過</button>` : ''}
+                        <button onclick="resetUserPass('${u.id}')" class="text-xs bg-gray-200 px-2 py-1 rounded ml-1">重置密碼</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function approveUser(uid) {
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const user = users.find(u => u.id === uid);
+            if(user) {
+                user.status = 'active';
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                
+                // Auto send welcome message
+                addMessage('admin', uid, '您的帳號已審核通過，歡迎開始購物！');
+                
+                toast('會員已開通', 'success');
+                renderAdminUsers();
+                checkAdminBadges();
+            }
+        }
+
+        function updateUserLevel(uid, lvl) {
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const user = users.find(u => u.id === uid);
+            if(user) {
+                user.level = Number(lvl);
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                toast('會員等級已更新', 'success');
+            }
+        }
+        
+        function resetUserPass(uid) {
+            const newPass = prompt(`請輸入 ${uid} 的新密碼:`);
+            if(newPass) {
+                const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                const user = users.find(u => u.id === uid);
+                user.pass = newPass;
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                toast('密碼已修改', 'success');
+            }
+        }
+
+        // Admin: Messages Logic
+        function renderAdminMessages() {
+            const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS)).filter(u => u.role !== 'admin');
+            
+            const list = document.getElementById('admin-msg-list');
+            list.innerHTML = users.map(u => {
+                const userMsgs = msgs.filter(m => m.from === u.id || m.to === u.id);
+                const lastMsg = userMsgs.length > 0 ? userMsgs[userMsgs.length - 1].content : '尚無訊息';
+                const isPending = u.status === 'pending';
+                // Highlight active user
+                const isActive = adminChatTarget === u.id;
+                
+                return `
+                <div onclick="openAdminChat('${u.id}')" class="p-3 border-b cursor-pointer hover:bg-gray-50 ${isActive ? 'bg-blue-50' : ''}">
+                    <div class="flex justify-between items-center">
+                        <span class="font-bold text-sm">${u.id} ${u.name}</span>
+                        ${isPending ? '<span class="text-[10px] bg-yellow-400 text-white px-1 rounded">待審核</span>' : ''}
+                    </div>
+                    <p class="text-xs text-gray-500 truncate">${lastMsg}</p>
+                </div>
+                `;
+            }).join('');
+        }
+
+        function openAdminChat(uid) {
+            adminChatTarget = uid;
+            renderAdminMessages(); // Update list highlight only
+            renderAdminChatBox();  // Render chat content
+        }
+
+        function renderAdminChatBox() {
+            if(!adminChatTarget) return;
+            const uid = adminChatTarget;
+
+            document.getElementById('admin-chat-header').innerText = `與 ${uid} 的對話`;
+            document.getElementById('admin-chat-input').disabled = false;
+            document.getElementById('admin-chat-send-btn').disabled = false;
+            
+            // Render Messages
+            const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
+            const chatMsgs = msgs.filter(m => m.from === uid || m.to === uid);
+            
+            const box = document.getElementById('admin-chat-box');
+            box.innerHTML = chatMsgs.map(m => {
+                const isAdmin = m.from === 'admin';
+                return `
+                <div class="flex ${isAdmin ? 'justify-end' : 'justify-start'}">
+                    <div class="max-w-[80%] rounded p-2 text-sm ${isAdmin ? 'bg-blue-100' : 'bg-white border'}">
+                         <p class="font-bold text-xs text-gray-500 mb-1">${isAdmin ? '管理員' : m.from}</p>
+                        <p>${m.content}</p>
+                        <p class="text-[10px] text-gray-400 text-right mt-1">${new Date(m.time).toLocaleString()}</p>
+                    </div>
+                </div>
+                `;
+            }).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+
+        function adminSendMsg() {
+            if(!adminChatTarget) return;
+            const input = document.getElementById('admin-chat-input');
+            const text = input.value.trim();
+            if(!text) return;
+            
+            addMessage('admin', adminChatTarget, text);
+            input.value = '';
+            // Only update chat box to avoid full re-render
+            renderAdminChatBox();
+            renderAdminMessages(); // Update last message preview in list
+        }
+
+        // Admin: Order Review Logic
+        function openOrderReview(oid) {
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            reviewingOrder = orders.find(o => o.oid === oid);
+            if(!reviewingOrder) return;
+
+            const list = document.getElementById('order-review-items');
+            list.innerHTML = reviewingOrder.items.map((item, idx) => `
+                <div class="flex justify-between items-center border-b pb-2">
+                    <div>
+                        <p class="font-bold text-sm">${item.name}</p>
+                        <p class="text-xs text-gray-500">原單價: ${item.originalPrice} | 數量: ${item.qty}</p>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <label class="text-xs">調整單價:</label>
+                        <input type="number" value="${item.finalPrice}" 
+                            onchange="updateOrderItemPrice('${oid}', ${idx}, this.value)" 
+                            class="w-20 border rounded p-1 text-sm text-right">
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('review-original-total').innerText = reviewingOrder.total;
+            document.getElementById('review-final-total').innerText = reviewingOrder.total;
+            document.getElementById('review-msg').value = `親愛的會員，您的訂單 ${oid} 已確認。\n品項價格已核對。\n\n請匯款至：\n銀行代號：000\n帳號：1234-5678-9000\n金額：$${reviewingOrder.total}\n\n匯款後請通知我們，謝謝！`;
+            
+            document.getElementById('modal-order-review').classList.remove('hide');
+        }
+
+        function updateOrderItemPrice(oid, idx, newPrice) {
+            newPrice = Number(newPrice);
+            if (reviewingOrder && reviewingOrder.oid === oid) {
+                reviewingOrder.items[idx].finalPrice = newPrice;
+                // Recalculate total
+                reviewingOrder.total = reviewingOrder.items.reduce((acc, i) => acc + (i.finalPrice * i.qty), 0);
+                document.getElementById('review-final-total').innerText = reviewingOrder.total;
+            }
+        }
+
+        function confirmOrderAction() {
+            if(!reviewingOrder) return;
+            
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const idx = orders.findIndex(o => o.oid === reviewingOrder.oid);
+            if(idx !== -1) {
+                // Update Order in DB
+                const msg = document.getElementById('review-msg').value;
+                orders[idx] = reviewingOrder;
+                orders[idx].status = 'confirmed';
+                orders[idx].adminNote = msg; // Store the confirmation note
+                
+                localStorage.setItem(DB_KEYS.ORDERS, JSON.stringify(orders));
+                
+                // Send Message
+                addMessage('admin', reviewingOrder.uid, msg);
+
+                toast('訂單已確認並通知會員', 'success');
+                closeModal('modal-order-review');
+                renderAdmin();
+                reviewingOrder = null;
+            }
+        }
+
+        function adminReplyOrder(oid, uid) {
+            const input = document.getElementById(`msg-input-${oid}`);
+            const text = input.value.trim();
+            if(text) {
+                addMessage('admin', uid, `[訂單 ${oid}] ${text}`);
+                input.value = '';
+                toast('訊息已發送', 'success');
+            }
+        }
+
+        // --- EXPORT / IMPORT ---
+        function exportData() {
+            const data = {
+                users: JSON.parse(localStorage.getItem(DB_KEYS.USERS)),
+                products: JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS)),
+                orders: JSON.parse(localStorage.getItem(DB_KEYS.ORDERS)),
+                messages: JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES))
+            };
+            const blob = new Blob([JSON.stringify(data, null, 2)], {type : 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `jcmarket_backup_${Date.now()}.json`;
+            a.click();
+        }
+
+        function importData(input) {
+            const file = input.files[0];
+            if(!file) return;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = JSON.parse(e.target.result);
+                    if(data.users) localStorage.setItem(DB_KEYS.USERS, JSON.stringify(data.users));
+                    if(data.products) localStorage.setItem(DB_KEYS.PRODUCTS, JSON.stringify(data.products));
+                    if(data.orders) localStorage.setItem(DB_KEYS.ORDERS, JSON.stringify(data.orders));
+                    if(data.messages) localStorage.setItem(DB_KEYS.MESSAGES, JSON.stringify(data.messages));
+                    alert('資料匯入成功，即將重新整理');
+                    location.reload();
+                } catch(err) {
+                    alert('資料格式錯誤');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // --- UTILS ---
+        function toast(msg, type='info') {
+            const container = document.getElementById('toast-container');
+            const el = document.createElement('div');
+            const colors = { error: 'bg-red-500', success: 'bg-green-500', warning: 'bg-yellow-500', info: 'bg-blue-500' };
+            el.className = `${colors[type]} text-white px-4 py-2 rounded shadow-lg transform transition-all duration-500 translate-x-full opacity-0`;
+            el.innerText = msg;
+            container.appendChild(el);
+            
+            // Animation
+            setTimeout(() => { el.classList.remove('translate-x-full', 'opacity-0'); }, 10);
+            setTimeout(() => { 
+                el.classList.add('opacity-0'); 
+                setTimeout(() => el.remove(), 500); 
+            }, 3000);
+        }
+
+    </script>
+</body>
+</html>
