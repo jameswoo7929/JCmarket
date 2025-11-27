@@ -16,29 +16,50 @@
         
         /* Product Card Hover Effect */
         .product-card:hover { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); }
+        
+        /* Badge Pulse Animation */
+        @keyframes pulse-red {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+            70% { box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .badge-pulse { animation: pulse-red 2s infinite; }
+
+        /* Print Styles (Hidden on Screen) */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background-color: white; }
+            .page-break { page-break-after: always; }
+        }
     </style>
 </head>
 <body class="text-gray-800">
 
     <!-- Notifications Container -->
-    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2"></div>
+    <div id="toast-container" class="fixed top-4 right-4 z-50 flex flex-col gap-2 no-print"></div>
 
     <!-- LOGIN PAGE -->
-    <section id="page-login" class="min-h-screen flex items-center justify-center bg-blue-50">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h1 class="text-3xl font-bold text-center text-pink-600 mb-2">JCmarket</h1>
+    <section id="page-login" class="min-h-screen flex items-center justify-center bg-blue-50 no-print">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border-t-4 border-blue-600">
+            <h1 class="text-4xl font-bold text-center mb-2 tracking-tight">
+                <span class="text-blue-700">J</span><span class="text-orange-500">C</span><span class="text-gray-700 text-2xl">market</span>
+            </h1>
             <p class="text-center text-gray-500 mb-6">購物網站登入系統</p>
             
             <div class="space-y-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-700">帳號 (身分證字號)</label>
-                    <input type="text" id="login-username" placeholder="例：A123456789" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-pink-500 focus:border-pink-500">
+                    <input type="text" id="login-username" placeholder="例：A123456789 (首字大寫英文)" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-700">密碼</label>
-                    <input type="password" id="login-password" placeholder="身分證後4碼+生日(YYMMDD) 共10碼" class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-pink-500 focus:border-pink-500">
+                    <input type="password" id="login-password" 
+                           onkeydown="if(event.key === 'Enter') handleLogin()"
+                           placeholder="身分證後4碼+生日(YYMMDD) 共10碼" 
+                           class="mt-1 block w-full border border-gray-300 rounded-md p-2 focus:ring-blue-500 focus:border-blue-500">
                 </div>
-                <button onclick="handleLogin()" class="w-full bg-pink-600 text-white py-2 rounded-md hover:bg-pink-700 transition">登入 / 註冊</button>
+                <button onclick="handleLogin()" class="w-full bg-orange-500 text-white py-2 rounded-md hover:bg-orange-600 transition font-bold shadow">登入 / 註冊</button>
             </div>
             
             <div class="mt-4 text-xs text-gray-500 bg-gray-100 p-3 rounded">
@@ -53,9 +74,9 @@
     </section>
 
     <!-- REGISTER PAGE -->
-    <section id="view-register" class="hide min-h-screen flex items-center justify-center bg-blue-50">
-        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md">
-            <h2 class="text-2xl font-bold text-center text-pink-600 mb-6">會員資料填寫</h2>
+    <section id="view-register" class="hide min-h-screen flex items-center justify-center bg-blue-50 no-print">
+        <div class="bg-white p-8 rounded-lg shadow-lg w-full max-w-md border-t-4 border-orange-500">
+            <h2 class="text-2xl font-bold text-center text-gray-800 mb-6">會員資料填寫</h2>
             <p class="text-sm text-gray-500 mb-4 text-center">請完成基本資料以送出審核</p>
             
             <div class="space-y-4">
@@ -65,10 +86,17 @@
                         <input type="text" id="reg-id" class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md p-2 text-gray-500 cursor-not-allowed" readonly>
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700">生日 (唯讀)</label>
-                        <input type="text" id="reg-birthday" class="mt-1 block w-full bg-gray-100 border border-gray-300 rounded-md p-2 text-gray-500 cursor-not-allowed" readonly>
+                        <label class="block text-sm font-medium text-gray-700">生日 (年份可選)</label>
+                        <div class="flex mt-1 shadow-sm rounded-md">
+                            <select id="reg-birth-prefix" class="rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-700 sm:text-sm p-2 focus:ring-blue-500 focus:border-blue-500">
+                                <option value="19">19</option>
+                                <option value="20">20</option>
+                            </select>
+                            <input type="text" id="reg-birth-suffix" class="flex-1 min-w-0 block w-full rounded-r-md border border-gray-300 bg-gray-100 text-gray-500 sm:text-sm p-2 cursor-not-allowed text-center" readonly>
+                        </div>
                     </div>
                 </div>
+                <p class="text-xs text-gray-500 -mt-2">* 年份後兩碼及日期依據您的密碼自動帶入，不可修改。</p>
 
                 <div>
                     <label class="block text-sm font-medium text-gray-700">真實姓名 <span class="text-red-500">*</span></label>
@@ -96,36 +124,41 @@
     </section>
 
     <!-- MAIN APP LAYOUT (Header + Content) -->
-    <div id="app-layout" class="hide min-h-screen flex flex-col">
+    <div id="app-layout" class="hide min-h-screen flex flex-col no-print">
         
         <!-- Header -->
-        <header class="bg-pink-600 text-white shadow-md sticky top-0 z-40">
+        <header class="bg-white shadow-md sticky top-0 z-40 border-b-4 border-blue-600">
             <div class="container mx-auto px-4 py-3 flex justify-between items-center">
                 <div class="flex items-center gap-4">
-                    <h1 class="text-2xl font-bold cursor-pointer" onclick="router('shop')">JCmarket</h1>
-                    <span id="nav-welcome" class="text-sm bg-pink-700 px-2 py-1 rounded">歡迎, 會員</span>
+                    <h1 class="text-2xl font-bold cursor-pointer flex items-center" onclick="router('shop')">
+                        <span class="text-blue-700 text-3xl mr-1">J</span>
+                        <span class="text-orange-500 text-3xl mr-1">C</span>
+                        <span class="text-gray-700">market</span>
+                    </h1>
+                    <span id="nav-welcome" class="text-sm bg-gray-100 text-gray-600 px-3 py-1 rounded-full border">歡迎, 會員</span>
                 </div>
                 
                 <nav class="flex items-center gap-4">
                     <!-- User Nav -->
                     <div id="nav-user" class="flex items-center gap-4">
-                        <button onclick="router('shop')" class="hover:text-pink-200"><i class="fas fa-home"></i> 首頁</button>
-                        <button onclick="router('cart')" class="hover:text-pink-200 relative">
+                        <button onclick="router('shop')" class="text-gray-600 hover:text-blue-600 transition"><i class="fas fa-home"></i> 首頁</button>
+                        <button onclick="router('cart')" class="text-gray-600 hover:text-blue-600 transition relative">
                             <i class="fas fa-shopping-cart"></i> 購物車
-                            <span id="cart-count" class="absolute -top-2 -right-2 bg-yellow-400 text-pink-800 text-xs font-bold px-1.5 rounded-full">0</span>
+                            <span id="cart-count" class="absolute -top-2 -right-2 bg-orange-500 text-white text-xs font-bold px-1.5 rounded-full">0</span>
                         </button>
-                        <button onclick="router('profile')" class="hover:text-pink-200 relative">
+                        <button onclick="router('profile')" class="text-gray-600 hover:text-blue-600 transition relative">
                             <i class="fas fa-user"></i> 會員中心
-                            <span id="msg-badge" class="hide absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+                            <span id="member-badge" class="hide absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full border border-white badge-pulse"></span>
                         </button>
                     </div>
 
-                    <!-- Admin Switch (Visible only to Admin) -->
-                    <button id="btn-admin-switch" onclick="router('admin')" class="hide bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700 text-sm border border-gray-600 shadow-sm">
+                    <!-- Admin Switch -->
+                    <button id="btn-admin-switch" onclick="router('admin')" class="hide bg-gray-800 text-white px-3 py-1 rounded hover:bg-gray-700 text-sm border border-gray-600 shadow-sm relative">
                         <i class="fas fa-cogs"></i> 回到後台
+                        <span id="admin-global-badge" class="hide absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border border-gray-800"></span>
                     </button>
 
-                    <button onclick="logout()" class="text-sm border border-white px-2 py-1 rounded hover:bg-white hover:text-pink-600">登出</button>
+                    <button onclick="logout()" class="text-sm text-gray-500 border border-gray-300 px-3 py-1 rounded hover:bg-gray-100 hover:text-red-500 transition">登出</button>
                 </nav>
             </div>
         </header>
@@ -136,59 +169,72 @@
             <!-- SHOP VIEW -->
             <section id="view-shop" class="hide">
                 <!-- Categories -->
-                <div class="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide" id="category-list">
-                    <!-- Injected via JS -->
-                </div>
-
+                <div class="flex gap-2 overflow-x-auto pb-4 mb-4 scrollbar-hide" id="category-list"></div>
                 <!-- Product Grid -->
-                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4" id="product-grid">
-                    <!-- Injected via JS -->
-                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-5 gap-4" id="product-grid"></div>
             </section>
 
             <!-- CART VIEW -->
             <section id="view-cart" class="hide max-w-4xl mx-auto">
-                <h2 class="text-2xl font-bold mb-4 border-b pb-2">購物車</h2>
-                <div id="cart-items" class="bg-white rounded shadow p-4 mb-4">
-                    <!-- Items -->
-                </div>
+                <h2 class="text-2xl font-bold mb-4 border-b pb-2 text-gray-800">購物車</h2>
+                <div id="cart-items" class="bg-white rounded shadow p-4 mb-4"></div>
                 <div class="bg-white rounded shadow p-4 text-right">
-                    <p class="text-xl font-bold text-pink-600">總金額: $<span id="cart-total">0</span></p>
-                    <button onclick="submitOrder()" class="mt-4 bg-pink-600 text-white px-6 py-2 rounded hover:bg-pink-700">送出訂單 (待核對)</button>
+                    <p class="text-xl font-bold text-orange-600">商品小計: $<span id="cart-subtotal">0</span></p>
+                    <button onclick="openCheckoutModal()" class="mt-4 bg-orange-500 text-white px-8 py-2 rounded hover:bg-orange-600 font-bold shadow-lg transition transform hover:scale-105">去買單 (選擇配送)</button>
                 </div>
             </section>
 
             <!-- PROFILE VIEW -->
-            <section id="view-profile" class="hide max-w-4xl mx-auto">
-                <div class="grid md:grid-cols-3 gap-6">
-                    <!-- Info -->
-                    <div class="bg-white p-4 rounded shadow">
-                        <h3 class="font-bold text-lg mb-4">會員資料</h3>
-                        <div id="profile-info" class="text-sm space-y-2"></div>
-                        <div class="mt-4 pt-4 border-t">
-                             <h4 class="font-bold mb-2">更改密碼</h4>
-                             <input type="password" id="new-password" placeholder="新密碼" class="w-full border p-1 mb-2 text-sm">
-                             <button onclick="updatePassword()" class="bg-gray-600 text-white px-3 py-1 text-sm rounded">更新</button>
+            <section id="view-profile" class="hide max-w-6xl mx-auto">
+                <!-- Notifications Area (New) -->
+                <div id="profile-notifications" class="mb-4"></div>
+
+                <div class="grid md:grid-cols-5 gap-6">
+                    <!-- Info (Editable) -->
+                    <div class="md:col-span-2 bg-white p-4 rounded shadow h-fit">
+                        <div class="flex justify-between items-center mb-4 border-b pb-2">
+                            <h3 class="font-bold text-lg text-gray-800">會員資料</h3>
+                            <span id="profile-level-badge" class="text-xs px-2 py-1 rounded bg-gray-200"></span>
+                        </div>
+                        
+                        <div class="space-y-3">
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500">帳號</label>
+                                <input type="text" id="profile-id" class="w-full bg-gray-100 border p-2 rounded text-sm text-gray-500 cursor-not-allowed" readonly>
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500">姓名</label>
+                                <input type="text" id="profile-name" class="w-full border p-2 rounded text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-gray-500">聯絡電話</label>
+                                <input type="tel" id="profile-phone" class="w-full border p-2 rounded text-sm focus:ring-blue-500 focus:border-blue-500">
+                            </div>
+                            
+                            <div class="bg-blue-50 p-3 rounded border border-blue-100">
+                                <label class="block text-xs font-bold text-gray-600 mb-2">預設收件地址</label>
+                                <div class="flex gap-2 mb-2">
+                                    <input type="text" id="profile-zip" placeholder="郵遞區號(6碼)" class="w-1/3 border p-2 rounded text-sm bg-white">
+                                    <select id="profile-city" class="w-1/3 border p-2 rounded text-sm bg-white"></select>
+                                    <select id="profile-dist" class="w-1/3 border p-2 rounded text-sm bg-white"></select>
+                                </div>
+                                <input type="text" id="profile-addr-detail" placeholder="街道巷弄..." class="w-full border p-2 rounded text-sm bg-white">
+                            </div>
+                            
+                            <button onclick="saveUserProfile()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition mt-2 shadow">儲存資料</button>
                         </div>
                     </div>
                     
                     <!-- Orders & Messages -->
-                    <div class="md:col-span-2 bg-white p-4 rounded shadow">
-                        <h3 class="font-bold text-lg mb-4">訂單與訊息</h3>
-                        
-                        <!-- Chat Box -->
-                        <div class="border rounded h-64 overflow-y-auto p-3 mb-3 bg-gray-50 flex flex-col gap-2" id="chat-box">
-                            <!-- Messages -->
-                        </div>
-                        <div class="flex gap-2">
+                    <div class="md:col-span-3 bg-white p-4 rounded shadow flex flex-col h-[600px]">
+                        <h3 class="font-bold text-lg mb-4 border-b pb-2 text-gray-800">訊息與訂單</h3>
+                        <div class="flex-grow border rounded p-3 mb-3 bg-gray-50 overflow-y-auto flex flex-col gap-2" id="chat-box"></div>
+                        <div class="flex gap-2 mb-6">
                             <input type="text" id="chat-input" class="flex-grow border p-2 rounded" placeholder="傳送訊息給管理員...">
-                            <button onclick="sendMessage('user')" class="bg-blue-600 text-white px-4 rounded">傳送</button>
+                            <button onclick="sendMessage('user')" class="bg-blue-600 text-white px-4 rounded hover:bg-blue-700 transition">傳送</button>
                         </div>
-
-                        <h4 class="font-bold mt-6 mb-2">歷史訂單</h4>
-                        <div id="profile-orders" class="space-y-3">
-                            <!-- Order History -->
-                        </div>
+                        <h4 class="font-bold text-sm text-gray-600 mb-2">最近訂單記錄</h4>
+                        <div id="profile-orders" class="space-y-2 overflow-y-auto h-48 border-t pt-2"></div>
                     </div>
                 </div>
             </section>
@@ -210,37 +256,47 @@
 
                 <!-- Admin Tabs -->
                 <div class="flex gap-1 mb-4 border-b overflow-x-auto">
-                    <button class="px-4 py-2 bg-gray-200 rounded-t active-tab whitespace-nowrap" onclick="switchAdminTab('orders', this)">訂單管理</button>
+                    <button class="px-4 py-2 bg-gray-200 rounded-t active-tab whitespace-nowrap relative" onclick="switchAdminTab('orders', this)">
+                        訂單管理 <span id="badge-admin-orders" class="hide absolute top-0 right-0 -mt-1 -mr-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow badge-pulse px-1">0</span>
+                    </button>
                     <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap" onclick="switchAdminTab('products', this)">商品管理</button>
-                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap" onclick="switchAdminTab('users', this)">會員管理</button>
-                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap" onclick="switchAdminTab('messages', this)">訊息中心 <span id="admin-msg-badge" class="hide bg-red-500 text-white text-[10px] px-1 rounded-full">New</span></button>
+                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap relative" onclick="switchAdminTab('users', this)">
+                        會員管理 <span id="badge-admin-users" class="hide absolute top-0 right-0 -mt-1 -mr-1 min-w-[1.25rem] h-5 bg-red-500 text-white text-[10px] font-bold flex items-center justify-center rounded-full shadow badge-pulse px-1">0</span>
+                    </button>
+                    <button class="px-4 py-2 bg-gray-100 rounded-t whitespace-nowrap relative" onclick="switchAdminTab('messages', this)">
+                        訊息中心 <span id="badge-admin-msgs" class="hide absolute top-0 right-0 -mt-1 -mr-1 w-3 h-3 bg-red-500 rounded-full badge-pulse"></span>
+                    </button>
                 </div>
 
                 <!-- Admin Content -->
                 <div id="admin-content-orders" class="admin-tab-content">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <h3 class="font-bold mb-2 text-yellow-600">待核對訂單</h3>
+                            <div class="bg-yellow-100 border-l-4 border-yellow-500 p-2 mb-3 flex justify-between items-center">
+                                <h3 class="font-bold text-yellow-700"><i class="fas fa-exclamation-circle"></i> 待核對訂單</h3>
+                                <span id="count-orders-pending" class="bg-white text-yellow-700 px-2 py-0.5 rounded text-xs font-bold shadow">0</span>
+                            </div>
                             <div id="admin-orders-pending" class="space-y-3"></div>
                         </div>
                         <div>
-                            <h3 class="font-bold mb-2 text-green-600">已成立訂單 (按時間)</h3>
+                            <div class="bg-green-100 border-l-4 border-green-500 p-2 mb-3 flex justify-between items-center">
+                                <h3 class="font-bold text-green-700"><i class="fas fa-check-circle"></i> 已成立訂單</h3>
+                                <div>
+                                    <button onclick="printSelectedOrders()" class="bg-gray-700 text-white px-2 py-1 rounded text-xs mr-2 hover:bg-gray-800 transition"><i class="fas fa-print"></i> 批次列印</button>
+                                    <span id="count-orders-confirmed" class="bg-white text-green-700 px-2 py-0.5 rounded text-xs font-bold shadow">0</span>
+                                </div>
+                            </div>
                             <div id="admin-orders-confirmed" class="space-y-3"></div>
                         </div>
                     </div>
                 </div>
 
                 <div id="admin-content-products" class="admin-tab-content hide">
-                    <div class="mb-4 bg-white p-4 rounded shadow">
-                        <h4 class="font-bold mb-2">新增/修改商品</h4>
-                        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-                            <input type="text" id="prod-name" placeholder="商品名稱" class="border p-2 rounded">
-                            <input type="number" id="prod-price" placeholder="價格" class="border p-2 rounded">
-                            <input type="text" id="prod-cat" placeholder="分類 (例: 3C)" class="border p-2 rounded">
-                            <input type="text" id="prod-img" placeholder="圖片網址" class="border p-2 rounded">
-                        </div>
-                        <button onclick="saveProduct()" class="mt-2 bg-pink-600 text-white px-4 py-2 rounded">儲存商品</button>
-                        <button onclick="resetProductForm()" class="mt-2 bg-gray-400 text-white px-4 py-2 rounded">重設</button>
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-gray-700">商品列表</h3>
+                        <button onclick="openAdminProductModal()" class="bg-purple-600 text-white px-4 py-2 rounded text-sm flex items-center gap-2 hover:bg-purple-700 shadow transition">
+                             <i class="fas fa-plus"></i> 新增商品
+                        </button>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="w-full bg-white shadow rounded text-sm text-left">
@@ -250,7 +306,9 @@
                                     <th class="p-3">圖片</th>
                                     <th class="p-3">名稱</th>
                                     <th class="p-3">分類</th>
-                                    <th class="p-3">價格</th>
+                                    <th class="p-3">進價</th>
+                                    <th class="p-3">售價</th>
+                                    <th class="p-3">利潤</th>
                                     <th class="p-3">操作</th>
                                 </tr>
                             </thead>
@@ -260,37 +318,55 @@
                 </div>
 
                 <div id="admin-content-users" class="admin-tab-content hide">
+                    <!-- Pending Users Section (High Priority) -->
+                    <div id="admin-users-pending-container" class="mb-6 hide">
+                        <h3 class="font-bold text-lg text-red-600 mb-2 border-b-2 border-red-200 pb-1">
+                            <i class="fas fa-bell badge-pulse"></i> 待審核申請 (請盡速處理)
+                        </h3>
+                        <div class="bg-red-50 rounded border border-red-200 overflow-hidden">
+                            <table class="w-full text-sm text-left">
+                                <thead class="bg-red-100 text-red-800">
+                                    <tr>
+                                        <th class="p-3">會員資料 (姓名/帳號)</th>
+                                        <th class="p-3">詳細資訊</th>
+                                        <th class="p-3 w-48">審核操作</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="admin-user-list-pending"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- All Users -->
+                    <div class="flex justify-between items-center mb-2">
+                        <h3 class="font-bold text-gray-700">正式會員列表</h3>
+                        <button onclick="openAdminUserModal()" class="bg-blue-600 text-white px-3 py-1 rounded text-sm hover:bg-blue-700 transition"><i class="fas fa-user-plus"></i> 新增會員</button>
+                    </div>
                     <div class="overflow-x-auto">
                         <table class="w-full bg-white shadow rounded text-sm text-left">
                             <thead class="bg-gray-100">
                                 <tr>
-                                    <th class="p-3">帳號 (ID)</th>
-                                    <th class="p-3">資料</th>
+                                    <th class="p-3">會員資料 (姓名/帳號)</th>
+                                    <th class="p-3">詳細資訊</th>
                                     <th class="p-3">狀態</th>
                                     <th class="p-3">等級</th>
                                     <th class="p-3">操作</th>
                                 </tr>
                             </thead>
-                            <tbody id="admin-user-list"></tbody>
+                            <tbody id="admin-user-list-active"></tbody>
                         </table>
                     </div>
                 </div>
 
                 <div id="admin-content-messages" class="admin-tab-content hide">
                     <div class="grid md:grid-cols-3 gap-4 h-[600px]">
-                        <!-- Message List -->
-                        <div class="md:col-span-1 bg-white shadow rounded overflow-y-auto" id="admin-msg-list">
-                            <!-- List of users who messaged -->
-                        </div>
-                        <!-- Chat View -->
+                        <div class="md:col-span-1 bg-white shadow rounded overflow-y-auto" id="admin-msg-list"></div>
                         <div class="md:col-span-2 bg-white shadow rounded flex flex-col">
-                            <div id="admin-chat-header" class="p-3 border-b font-bold bg-gray-50">
-                                請選擇對話
-                            </div>
+                            <div id="admin-chat-header" class="p-3 border-b font-bold bg-gray-50">請選擇對話</div>
                             <div id="admin-chat-box" class="flex-grow p-4 overflow-y-auto bg-gray-50 space-y-3"></div>
                             <div class="p-3 border-t flex gap-2">
                                 <input type="text" id="admin-chat-input" class="flex-grow border rounded p-2" placeholder="輸入回覆..." disabled>
-                                <button onclick="adminSendMsg()" id="admin-chat-send-btn" class="bg-blue-600 text-white px-4 rounded disabled:bg-gray-400" disabled>發送</button>
+                                <button onclick="adminSendMsg()" id="admin-chat-send-btn" class="bg-blue-600 text-white px-4 rounded disabled:bg-gray-400 hover:bg-blue-700 transition" disabled>發送</button>
                             </div>
                         </div>
                     </div>
@@ -300,24 +376,215 @@
     </div>
 
     <!-- MODALS -->
-    <!-- Order Review Modal (Admin) -->
-    <div id="modal-order-review" class="fixed inset-0 modal hide flex items-center justify-center z-50">
-        <div class="bg-white p-6 rounded-lg w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-            <h3 class="text-xl font-bold mb-4">訂單核對 & 價格調整</h3>
-            <div id="order-review-items" class="space-y-2 mb-4"></div>
-            <div class="flex justify-between items-center bg-gray-100 p-3 rounded mb-4">
-                 <span>原始總額: $<span id="review-original-total">0</span></span>
-                 <span class="font-bold text-pink-600 text-lg">調整後總額: $<span id="review-final-total">0</span></span>
+    
+    <!-- Register Success Modal (New) -->
+    <div id="modal-register-success" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-8 rounded-lg w-full max-w-sm text-center relative border-t-4 border-green-500">
+            <div class="mb-4 text-green-500 text-5xl">
+                <i class="fas fa-check-circle"></i>
             </div>
+            <h3 class="text-2xl font-bold mb-2 text-gray-800">申請已送出！</h3>
+            <p class="text-gray-600 mb-6">請等待管理員審核您的帳號。</p>
             
-            <div class="mb-4">
-                <label class="block text-sm font-bold mb-1">給會員的留言/通知</label>
-                <textarea id="review-msg" class="w-full border p-2 rounded h-20" placeholder="例：商品確認無誤，請匯款至..."></textarea>
+            <div class="bg-orange-100 border-2 border-orange-300 p-4 rounded-lg mb-6">
+                <h4 class="font-bold text-orange-600 text-lg mb-1">🎉 新會員專屬好禮 🎉</h4>
+                <p class="font-bold text-gray-800 mb-3">獲贈 $100 元折價券</p>
+                <p class="text-sm text-gray-600 mb-2">加入官方 LINE 好友領取：</p>
+                <div class="flex justify-center">
+                    <a href="https://lin.ee/1TTrkju" target="_blank"><img src="https://scdn.line-apps.com/n/line_add_friends/btn/zh-Hant.png" alt="加入好友" height="36" border="0"></a>
+                </div>
             </div>
 
+            <button onclick="finishRegistration()" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 transition">返回登入頁面</button>
+        </div>
+    </div>
+
+    <!-- Checkout Modal -->
+    <div id="modal-checkout" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-lg max-h-[90vh] overflow-y-auto border-t-4 border-orange-500">
+            <h3 class="text-xl font-bold mb-4 border-b pb-2">結帳與配送</h3>
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-2">選擇配送方式</label>
+                <div class="flex gap-4">
+                    <label class="flex items-center gap-2 cursor-pointer p-2 border rounded hover:bg-orange-50 transition">
+                        <input type="radio" name="deliveryType" value="pickup" onchange="toggleDeliveryMethod('pickup')" checked>
+                        <span>到店自取</span>
+                    </label>
+                    <label class="flex items-center gap-2 cursor-pointer p-2 border rounded hover:bg-orange-50 transition">
+                        <input type="radio" name="deliveryType" value="delivery" onchange="toggleDeliveryMethod('delivery')">
+                        <span>宅配 (滿$3000免運)</span>
+                    </label>
+                </div>
+            </div>
+            <div id="opt-pickup" class="space-y-3 mb-4 bg-gray-50 p-3 rounded border">
+                <div>
+                    <label class="block text-sm font-bold mb-1">自取日期</label>
+                    <input type="date" id="checkout-date" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">自取時段</label>
+                    <select id="checkout-time" class="w-full border p-2 rounded text-sm">
+                        <option value="morning">上午 (10:00 - 12:00)</option>
+                        <option value="afternoon">下午 (14:00 - 17:00)</option>
+                        <option value="evening">晚上 (18:00 - 20:00)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="opt-delivery" class="hide space-y-3 mb-4 bg-gray-50 p-3 rounded border">
+                <p class="text-sm text-gray-600 border-b pb-2 mb-2">宅配運費：$100 (滿 $3000 免運)</p>
+                <div>
+                    <label class="block text-sm font-bold mb-1">收件人姓名</label>
+                    <input type="text" id="checkout-addr-name" class="w-full border p-2 rounded text-sm" placeholder="請輸入姓名">
+                </div>
+                <div>
+                    <label class="block text-sm font-bold mb-1">收件地址</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="checkout-zip" placeholder="郵遞區號(6碼)" class="w-1/3 border p-2 rounded text-sm bg-white">
+                        <select id="checkout-city" class="w-1/3 border p-2 rounded text-sm bg-white"></select>
+                        <select id="checkout-dist" class="w-1/3 border p-2 rounded text-sm bg-white"></select>
+                    </div>
+                    <input type="text" id="checkout-addr-detail" class="w-full border p-2 rounded text-sm" placeholder="街道巷弄樓層...">
+                </div>
+                <div class="flex items-center gap-2 mt-2">
+                    <input type="checkbox" id="save-as-default" class="cursor-pointer">
+                    <label for="save-as-default" class="text-sm cursor-pointer select-none">同步更新至會員預設地址</label>
+                </div>
+            </div>
+            <div class="border-t pt-3">
+                <div class="flex justify-between text-sm mb-1">
+                    <span>商品小計:</span>
+                    <span>$<span id="checkout-subtotal">0</span></span>
+                </div>
+                <div class="flex justify-between text-sm mb-1 text-gray-600">
+                    <span>運費:</span>
+                    <span>$<span id="checkout-shipping">0</span></span>
+                </div>
+                <div class="flex justify-between font-bold text-xl text-orange-600 mt-2">
+                    <span>總金額:</span>
+                    <span>$<span id="checkout-total">0</span></span>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('modal-checkout')" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">取消</button>
+                <button onclick="confirmCheckout()" class="bg-orange-500 text-white px-6 py-2 rounded hover:bg-orange-600 shadow">確認下訂</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order Review Modal (Admin) -->
+    <div id="modal-order-review" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-3xl max-h-[90vh] overflow-y-auto border-t-4 border-yellow-500">
+            <h3 class="text-xl font-bold mb-4">訂單核對 & 內容調整</h3>
+            <div class="bg-blue-50 p-3 rounded mb-4 text-sm border border-blue-100">
+                <p class="mb-1"><strong class="text-blue-800">會員資料：</strong><span id="review-member-info"></span></p>
+                <p><strong class="text-blue-800">配送方式：</strong><span id="review-delivery-info"></span></p>
+            </div>
+            <table class="w-full text-sm text-left mb-4">
+                <thead class="bg-gray-100 border-b">
+                    <tr>
+                        <th class="p-2">商品</th>
+                        <th class="p-2 w-20">數量</th>
+                        <th class="p-2 w-24">單價</th>
+                        <th class="p-2 w-24">狀態</th>
+                    </tr>
+                </thead>
+                <tbody id="order-review-items"></tbody>
+            </table>
+            <div class="flex justify-end gap-4 bg-gray-100 p-3 rounded mb-4 text-sm">
+                 <div>運費: $<span id="review-shipping-fee">0</span></div>
+                 <div class="font-bold text-orange-600 text-lg">總額: $<span id="review-final-total">0</span></div>
+            </div>
+            <div class="mb-4">
+                <label class="block text-sm font-bold mb-1 text-gray-700">給會員的通知訊息 (將自動發送)</label>
+                <textarea id="review-msg" class="w-full border p-2 rounded h-24 focus:ring-yellow-500 focus:border-yellow-500" placeholder="例：商品確認無誤，請匯款至..."></textarea>
+            </div>
             <div class="flex justify-end gap-2">
-                <button onclick="closeModal('modal-order-review')" class="bg-gray-300 px-4 py-2 rounded">取消</button>
-                <button onclick="confirmOrderAction()" class="bg-green-600 text-white px-4 py-2 rounded">確認訂單並通知</button>
+                <button onclick="closeModal('modal-order-review')" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">取消</button>
+                <button id="btn-confirm-order" onclick="confirmOrderAction()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700 shadow">確認訂單並通知</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin Product Modal (New) -->
+    <div id="modal-admin-product" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-lg">
+            <h3 class="text-xl font-bold mb-4" id="modal-admin-prod-title">新增商品</h3>
+            <div class="grid grid-cols-1 gap-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600 mb-1">商品名稱</label>
+                    <input type="text" id="modal-prod-name" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                     <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">進價 (成本)</label>
+                        <input type="number" id="modal-prod-cost" class="w-full border p-2 rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">售價</label>
+                        <input type="number" id="modal-prod-price" class="w-full border p-2 rounded text-sm">
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-3">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600 mb-1">分類</label>
+                        <input type="text" id="modal-prod-cat" class="w-full border p-2 rounded text-sm" placeholder="例: 3C">
+                    </div>
+                    <div>
+                         <label class="block text-xs font-bold text-gray-600 mb-1">圖片網址</label>
+                         <input type="text" id="modal-prod-img" class="w-full border p-2 rounded text-sm" placeholder="https://...">
+                    </div>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('modal-admin-product')" class="bg-gray-300 px-4 py-2 rounded">取消</button>
+                <button onclick="saveProduct()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">儲存</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Admin User Edit Modal -->
+    <div id="modal-admin-user" class="fixed inset-0 modal hide flex items-center justify-center z-50">
+        <div class="bg-white p-6 rounded-lg w-full max-w-lg">
+            <h3 class="text-xl font-bold mb-4" id="modal-admin-user-title">新增會員</h3>
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">帳號 (身分證)</label>
+                    <input type="text" id="adm-user-id" class="w-full border p-2 rounded text-sm">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">密碼</label>
+                    <input type="text" id="adm-user-pass" class="w-full border p-2 rounded text-sm" placeholder="預設密碼...">
+                </div>
+                <div class="grid grid-cols-2 gap-2">
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">姓名</label>
+                        <input type="text" id="adm-user-name" class="w-full border p-2 rounded text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-gray-600">電話</label>
+                        <input type="text" id="adm-user-phone" class="w-full border p-2 rounded text-sm">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">等級</label>
+                    <select id="adm-user-level" class="w-full border p-2 rounded text-sm">
+                        <option value="0">一般會員</option>
+                        <option value="1">VIP會員</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-gray-600">地址</label>
+                    <div class="flex gap-2 mb-2">
+                        <input type="text" id="adm-user-zip" placeholder="郵遞區號(6碼)" class="w-1/3 border p-2 rounded text-sm bg-white">
+                        <select id="adm-user-city" class="w-1/3 border p-2 rounded text-sm bg-white"></select>
+                        <select id="adm-user-dist" class="w-1/3 border p-2 rounded text-sm bg-white"></select>
+                    </div>
+                    <input type="text" id="adm-user-addr-detail" class="w-full border p-2 rounded text-sm" placeholder="詳細地址...">
+                </div>
+            </div>
+            <div class="flex justify-end gap-2 mt-6">
+                <button onclick="closeModal('modal-admin-user')" class="bg-gray-300 px-4 py-2 rounded">取消</button>
+                <button onclick="saveAdminUser()" class="bg-blue-600 text-white px-6 py-2 rounded hover:bg-blue-700">儲存</button>
             </div>
         </div>
     </div>
@@ -333,16 +600,15 @@
                 <div>
                     <span class="text-gray-400 line-through text-sm">原價 $<span id="modal-p-price"></span></span>
                     <br>
-                    <span class="text-2xl font-bold text-pink-600">$<span id="modal-p-disc-price"></span></span>
+                    <span class="text-2xl font-bold text-orange-600">$<span id="modal-p-disc-price"></span></span>
                     <span class="text-xs text-red-500 ml-1" id="modal-p-discount-tag"></span>
                 </div>
             </div>
-            <button id="btn-add-to-cart" class="w-full bg-pink-600 text-white py-2 rounded hover:bg-pink-700">加入購物車</button>
+            <button id="btn-add-to-cart" class="w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 font-bold">加入購物車</button>
         </div>
     </div>
 
     <script>
-        // --- DATA & STATE ---
         const DB_KEYS = {
             USERS: 'jc_users',
             PRODUCTS: 'jc_products',
@@ -351,14 +617,23 @@
             CURRENT_USER: 'jc_current_user'
         };
 
-        // Initial Data Seeding
+        const TW_ZIPS = {
+            "臺北市": { "中正區": "100000", "大同區": "103000", "中山區": "104000", "松山區": "105000", "大安區": "106000", "萬華區": "108000", "信義區": "110000", "士林區": "111000", "北投區": "112000", "內湖區": "114000", "南港區": "115000", "文山區": "116000" },
+            "新北市": { "板橋區": "220000", "三重區": "241000", "中和區": "235000", "永和區": "234000", "新莊區": "242000", "新店區": "231000", "土城區": "236000", "蘆洲區": "247000", "汐止區": "221000", "樹林區": "238000", "淡水區": "251000", "三峽區": "237000" },
+            "桃園市": { "中壢區": "320000", "平鎮區": "324000", "龍潭區": "325000", "楊梅區": "326000", "新屋區": "327000", "觀音區": "328000", "桃園區": "330000", "龜山區": "333000", "八德區": "334000", "大溪區": "335000" },
+            "臺中市": { "中區": "400000", "東區": "401000", "南區": "402000", "西區": "403000", "北區": "404000", "北屯區": "406000", "西屯區": "407000", "南屯區": "408000", "太平區": "411000", "大里區": "412000", "霧峰區": "413000" },
+            "臺南市": { "中西區": "700000", "東區": "701000", "南區": "702000", "北區": "704000", "安平區": "708000", "安南區": "709000", "永康區": "710000", "歸仁區": "711000" },
+            "高雄市": { "新興區": "800000", "前金區": "801000", "苓雅區": "802000", "鹽埕區": "803000", "鼓山區": "804000", "旗津區": "805000", "前鎮區": "806000", "三民區": "807000", "楠梓區": "811000", "小港區": "812000", "左營區": "813000", "鳳山區": "830000" },
+            "新竹市": { "東區": "300000", "北區": "300000", "香山區": "300000" }
+        };
+
         const initialProducts = [
-            { id: 1, name: "Apple iPhone 15 Pro", price: 36900, category: "3C", img: "https://placehold.co/400x400/333/FFF?text=iPhone+15" },
-            { id: 2, name: "Dyson 吹風機", price: 12900, category: "家電", img: "https://placehold.co/400x400/pink/FFF?text=Dyson" },
-            { id: 3, name: "SK-II 青春露", price: 4500, category: "美妝", img: "https://placehold.co/400x400/red/FFF?text=SK-II" },
-            { id: 4, name: "Nike 慢跑鞋", price: 2800, category: "運動", img: "https://placehold.co/400x400/orange/FFF?text=Nike" },
-            { id: 5, name: "Sony WH-1000XM5", price: 9900, category: "3C", img: "https://placehold.co/400x400/black/FFF?text=Sony" },
-            { id: 6, name: "衛生紙一箱", price: 899, category: "日用", img: "https://placehold.co/400x400/white/333?text=Tissue" }
+            { id: 1, name: "Apple iPhone 15 Pro", price: 36900, cost: 34000, category: "3C", img: "https://placehold.co/400x400/333/FFF?text=iPhone+15" },
+            { id: 2, name: "Dyson 吹風機", price: 12900, cost: 10000, category: "家電", img: "https://placehold.co/400x400/pink/FFF?text=Dyson" },
+            { id: 3, name: "SK-II 青春露", price: 4500, cost: 3500, category: "美妝", img: "https://placehold.co/400x400/red/FFF?text=SK-II" },
+            { id: 4, name: "Nike 慢跑鞋", price: 2800, cost: 1800, category: "運動", img: "https://placehold.co/400x400/orange/FFF?text=Nike" },
+            { id: 5, name: "Sony WH-1000XM5", price: 9900, cost: 8000, category: "3C", img: "https://placehold.co/400x400/black/FFF?text=Sony" },
+            { id: 6, name: "衛生紙一箱", price: 899, cost: 600, category: "日用", img: "https://placehold.co/400x400/white/333?text=Tissue" }
         ];
 
         let currentUser = null;
@@ -366,12 +641,15 @@
         let editingProductId = null;
         let reviewingOrder = null;
         let adminChatTarget = null; 
-        let tempRegisterAuth = null; // Store temp credentials for registration
+        let tempRegisterAuth = null; 
+        let editingUserId = null; 
+        
+        const SHIPPING_THRESHOLD = 3000;
+        const SHIPPING_FEE = 100;
+        let currentDeliveryType = 'pickup';
 
-        // --- INIT ---
         window.onload = function() {
             if(!localStorage.getItem(DB_KEYS.USERS)) {
-                // Seed Admin
                 const admin = { id: 'admin', pass: 'admin', role: 'admin', name: '管理員', status: 'active', level: 1 };
                 localStorage.setItem(DB_KEYS.USERS, JSON.stringify([admin]));
             }
@@ -384,7 +662,6 @@
             checkSession();
         };
 
-        // --- AUTH SYSTEM ---
         function checkSession() {
             const stored = sessionStorage.getItem(DB_KEYS.CURRENT_USER);
             if (stored) {
@@ -407,25 +684,19 @@
             const user = users.find(u => u.id === userIn);
 
             if (user) {
-                // Existing user
                 if (user.pass === passIn) {
-                    // Check Status
                     if (user.status === 'pending') {
                         toast('帳號審核中，請等待管理員通知', 'warning');
                         return;
                     }
-                    // Login
                     loginSuccess(user);
                 } else {
                     toast('密碼錯誤', 'error');
                 }
             } else {
-                // New User -> Redirect to Register View
-                // Validate ID format (Simple Check: Start with Letter, length 10)
                 const idRegex = /^[A-Z][0-9]{9}$/;
-                if (!idRegex.test(userIn)) return toast('帳號格式錯誤，請輸入身分證字號', 'error');
+                if (!idRegex.test(userIn)) return toast('帳號格式錯誤，請輸入身分證字號 (首字大寫英文)', 'error');
 
-                // Validate Password format (Last 4 ID + 6 date digits = 10 digits)
                 const last4Id = userIn.slice(-4);
                 const passRegex = new RegExp(`^${last4Id}\\d{6}$`);
                 
@@ -433,15 +704,18 @@
                     return toast('首次登入密碼格式錯誤 (身分證後4碼+生日6碼)', 'error');
                 }
 
-                // Prepare Registration View
                 tempRegisterAuth = { id: userIn, pass: passIn };
                 
-                // Extract birthday from password (last 6 digits: YYMMDD)
-                const rawDate = passIn.slice(-6); // e.g., 990101
-                const formattedBirthday = `${rawDate.substring(0,2)}/${rawDate.substring(2,4)}/${rawDate.substring(4,6)}`;
+                const rawDate = passIn.slice(-6); 
+                const yearYY = parseInt(rawDate.substring(0, 2));
+                const currentYY = new Date().getFullYear() % 100; 
+                const prefix = yearYY > currentYY ? '19' : '20';
+                const suffixDate = `${rawDate.substring(0,2)}/${rawDate.substring(2,4)}/${rawDate.substring(4,6)}`;
 
                 document.getElementById('reg-id').value = userIn;
-                document.getElementById('reg-birthday').value = `19${formattedBirthday}`; // Simplified assumption for demo
+                document.getElementById('reg-birth-prefix').value = prefix; 
+                document.getElementById('reg-birth-suffix').value = suffixDate;
+                
                 document.getElementById('reg-name').value = '';
                 document.getElementById('reg-phone').value = '';
                 
@@ -453,51 +727,67 @@
         }
 
         function submitRegistration() {
-            const name = document.getElementById('reg-name').value.trim();
-            const gender = document.getElementById('reg-gender').value;
-            const phone = document.getElementById('reg-phone').value.trim();
-            const birthday = document.getElementById('reg-birthday').value;
+            try {
+                const name = document.getElementById('reg-name').value.trim();
+                const gender = document.getElementById('reg-gender').value;
+                const phone = document.getElementById('reg-phone').value.trim();
+                
+                const birthPrefix = document.getElementById('reg-birth-prefix').value;
+                const birthSuffix = document.getElementById('reg-birth-suffix').value; 
+                const birthday = `${birthPrefix}${birthSuffix}`;
 
-            if(!name || !phone) return toast('請填寫完整姓名與電話', 'error');
-            if(!tempRegisterAuth) return toast('驗證失效，請重新登入', 'error');
+                if(!name || !phone) return toast('請填寫完整姓名與電話', 'error');
+                if(!tempRegisterAuth) {
+                    document.getElementById('view-register').classList.add('hide');
+                    document.getElementById('page-login').classList.remove('hide');
+                    return toast('驗證失效，請重新登入', 'error');
+                }
 
-            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
-            
-            // Double check duplicate
-            if(users.some(u => u.id === tempRegisterAuth.id)) {
-                toast('此帳號已存在', 'error');
+                const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                if(users.some(u => u.id === tempRegisterAuth.id)) {
+                    toast('此帳號已存在', 'error');
+                    cancelRegistration();
+                    return;
+                }
+
+                const newUser = {
+                    id: tempRegisterAuth.id,
+                    pass: tempRegisterAuth.pass,
+                    role: 'user',
+                    name: name,
+                    gender: gender,
+                    phone: phone,
+                    birthday: birthday,
+                    addressCity: '',
+                    addressDist: '',
+                    addressDetail: '',
+                    status: 'pending',
+                    level: 0, 
+                    joined: new Date().toISOString()
+                };
+                
+                users.push(newUser);
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                
+                openRegisterSuccessModal();
+            } catch (e) {
+                console.error(e);
+                toast('註冊發生錯誤，請重試', 'error');
                 cancelRegistration();
-                return;
             }
+        }
 
-            // Create Pending User
-            const newUser = {
-                id: tempRegisterAuth.id,
-                pass: tempRegisterAuth.pass,
-                role: 'user',
-                name: name,
-                gender: gender,
-                phone: phone,
-                birthday: birthday,
-                status: 'pending',
-                level: 0, 
-                joined: new Date().toISOString()
-            };
-            
-            users.push(newUser);
-            localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
-            
-            // Notify Admin
-            addMessage('system', 'admin', `會員申請: ${newUser.name} (${newUser.id}) 已提交資料，待審核。`);
-            
-            // Clear and Redirect
+        function openRegisterSuccessModal() {
+            document.getElementById('modal-register-success').classList.remove('hide');
+        }
+
+        function finishRegistration() {
+            document.getElementById('modal-register-success').classList.add('hide');
             tempRegisterAuth = null;
             document.getElementById('view-register').classList.add('hide');
             document.getElementById('page-login').classList.remove('hide');
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
-
-            toast('資料已送出！請等待管理員審核通知', 'success');
         }
 
         function cancelRegistration() {
@@ -511,34 +801,65 @@
             sessionStorage.setItem(DB_KEYS.CURRENT_USER, JSON.stringify(user));
             document.getElementById('page-login').classList.add('hide');
             initApp();
+            
+            if(user.role === 'admin') {
+                const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+                const pendingCount = orders.filter(o => o.status === 'pending').length;
+                if(pendingCount > 0) {
+                    setTimeout(() => alert(`歡迎管理員！目前有 ${pendingCount} 筆訂單待核對。`), 500);
+                }
+            }
         }
 
         function logout() {
-            // FIX: Do not use location.reload() to avoid clearing local storage in preview environments
             currentUser = null;
             sessionStorage.removeItem(DB_KEYS.CURRENT_USER);
-            
-            // UI Reset
             document.getElementById('app-layout').classList.add('hide');
             document.getElementById('view-register').classList.add('hide');
             document.getElementById('page-login').classList.remove('hide');
-            
-            // Clear inputs
             document.getElementById('login-username').value = '';
             document.getElementById('login-password').value = '';
-            
-            // Clear specific state
             cart = [];
             adminChatTarget = null;
-            
             toast('已登出', 'info');
         }
 
-        // --- APP LOGIC ---
+        function initAddressSelectors(cityId, distId, zipId, savedCity, savedDist) {
+            const citySelect = document.getElementById(cityId);
+            const distSelect = document.getElementById(distId);
+            const zipInput = document.getElementById(zipId);
+
+            citySelect.innerHTML = '<option value="">請選擇縣市</option>';
+            Object.keys(TW_ZIPS).forEach(city => {
+                citySelect.innerHTML += `<option value="${city}" ${savedCity === city ? 'selected' : ''}>${city}</option>`;
+            });
+
+            const populateDistricts = (city) => {
+                distSelect.innerHTML = '<option value="">請選擇區域</option>';
+                if (city && TW_ZIPS[city]) {
+                    Object.keys(TW_ZIPS[city]).forEach(dist => {
+                        distSelect.innerHTML += `<option value="${dist}" ${savedDist === dist ? 'selected' : ''}>${dist}</option>`;
+                    });
+                    if(savedDist && TW_ZIPS[city][savedDist] && !zipInput.value) {
+                        zipInput.value = TW_ZIPS[city][savedDist];
+                    }
+                }
+            };
+
+            if(savedCity) populateDistricts(savedCity);
+
+            citySelect.onchange = (e) => populateDistricts(e.target.value);
+            distSelect.onchange = (e) => {
+                const city = citySelect.value;
+                const dist = e.target.value;
+                if(city && dist && TW_ZIPS[city][dist]) {
+                    zipInput.value = TW_ZIPS[city][dist];
+                }
+            };
+        }
+
         function initApp() {
             document.getElementById('app-layout').classList.remove('hide');
-            
-            // Setup UI based on role
             document.getElementById('nav-welcome').innerText = `歡迎, ${currentUser.name}`;
             
             if (currentUser.role === 'admin') {
@@ -549,6 +870,7 @@
             } else {
                 document.getElementById('btn-admin-switch').classList.add('hide');
                 document.getElementById('nav-user').classList.remove('hide');
+                checkMemberBadges();
                 router('shop');
             }
 
@@ -557,10 +879,7 @@
         }
 
         function router(viewName) {
-            // Hide all views
             ['shop', 'cart', 'profile', 'admin'].forEach(v => document.getElementById(`view-${v}`).classList.add('hide'));
-            
-            // Show selected
             document.getElementById(`view-${viewName}`).classList.remove('hide');
 
             if (viewName === 'shop') renderShop();
@@ -576,19 +895,16 @@
             }
         }
 
-        // --- SHOP & PRODUCTS ---
         function renderShop() {
             const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
             const grid = document.getElementById('product-grid');
             const catList = document.getElementById('category-list');
             
-            // Categories
             const categories = ['全部', ...new Set(products.map(p => p.category))];
             catList.innerHTML = categories.map(c => 
                 `<button onclick="filterShop('${c}')" class="whitespace-nowrap px-4 py-1 rounded-full bg-white border hover:bg-pink-50">${c}</button>`
             ).join('');
 
-            // Products
             filterShop('全部');
         }
 
@@ -616,7 +932,6 @@
 
         function getMemberDiscount() {
             if (!currentUser) return 1;
-            // Level 0: 100%, Level 1 (VIP): 95%, Level 2: 90%
             const level = currentUser.level || 0;
             if (level === 1) return 0.95;
             if (level >= 2) return 0.90;
@@ -648,7 +963,6 @@
             document.getElementById(id).classList.add('hide');
         }
 
-        // --- CART & ORDERS ---
         function addToCart(product) {
             const discount = getMemberDiscount();
             const finalPrice = Math.floor(product.price * discount);
@@ -673,7 +987,7 @@
             const container = document.getElementById('cart-items');
             if(cart.length === 0) {
                 container.innerHTML = '<p class="text-center text-gray-500 py-4">購物車是空的</p>';
-                document.getElementById('cart-total').innerText = '0';
+                document.getElementById('cart-subtotal').innerText = '0';
                 return;
             }
 
@@ -698,7 +1012,7 @@
                 </div>
                 `;
             }).join('');
-            document.getElementById('cart-total').innerText = total;
+            document.getElementById('cart-subtotal').innerText = total;
         }
 
         function updateCartQty(idx, change) {
@@ -708,18 +1022,104 @@
             updateCartCount();
         }
 
-        function submitOrder() {
+        function openCheckoutModal() {
             if(cart.length === 0) return toast('購物車是空的', 'error');
+            
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('checkout-date').valueAsDate = tomorrow;
+            
+            if(currentUser) {
+                document.getElementById('checkout-addr-name').value = currentUser.name;
+                initAddressSelectors('checkout-city', 'checkout-dist', 'checkout-zip', currentUser.addressCity, currentUser.addressDist);
+                document.getElementById('checkout-addr-detail').value = currentUser.addressDetail || '';
+                if(currentUser.addressZip) document.getElementById('checkout-zip').value = currentUser.addressZip;
+            } else {
+                initAddressSelectors('checkout-city', 'checkout-dist', 'checkout-zip', '', '');
+            }
+
+            toggleDeliveryMethod('pickup');
+            document.getElementById('modal-checkout').classList.remove('hide');
+        }
+
+        function toggleDeliveryMethod(type) {
+            currentDeliveryType = type;
+            const optPickup = document.getElementById('opt-pickup');
+            const optDelivery = document.getElementById('opt-delivery');
+            
+            if(type === 'pickup') {
+                optPickup.classList.remove('hide');
+                optDelivery.classList.add('hide');
+            } else {
+                optPickup.classList.add('hide');
+                optDelivery.classList.remove('hide');
+            }
+            calcCheckoutTotal();
+        }
+
+        function calcCheckoutTotal() {
+            const subtotal = cart.reduce((acc, item) => acc + (item.finalPrice * item.qty), 0);
+            let shipping = 0;
+
+            if(currentDeliveryType === 'delivery') {
+                if(subtotal < SHIPPING_THRESHOLD) {
+                    shipping = SHIPPING_FEE;
+                }
+            }
+
+            document.getElementById('checkout-subtotal').innerText = subtotal;
+            document.getElementById('checkout-shipping').innerText = shipping;
+            document.getElementById('checkout-total').innerText = subtotal + shipping;
+            
+            return { subtotal, shipping, total: subtotal + shipping };
+        }
+
+        function confirmCheckout() {
+            const { subtotal, shipping, total } = calcCheckoutTotal();
+            let deliveryInfo = {};
+
+            if (currentDeliveryType === 'pickup') {
+                const date = document.getElementById('checkout-date').value;
+                const time = document.getElementById('checkout-time').options[document.getElementById('checkout-time').selectedIndex].text;
+                if(!date) return toast('請選擇取貨日期', 'error');
+                deliveryInfo = { type: 'pickup', text: `到店自取 - ${date} ${time}`, date, time };
+            } else {
+                const name = document.getElementById('checkout-addr-name').value.trim();
+                const city = document.getElementById('checkout-city').value;
+                const dist = document.getElementById('checkout-dist').value;
+                const zip = document.getElementById('checkout-zip').value;
+                const detail = document.getElementById('checkout-addr-detail').value.trim();
+                
+                if(!name || !city || !dist || !detail) return toast('請填寫完整收件資訊', 'error');
+                const fullAddr = `${zip} ${city}${dist}${detail}`;
+                deliveryInfo = { type: 'delivery', text: `宅配 - ${name} (${fullAddr})`, name, addr: fullAddr };
+
+                const saveDefault = document.getElementById('save-as-default').checked;
+                if (saveDefault && currentUser) {
+                    const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                    const idx = users.findIndex(u => u.id === currentUser.id);
+                    if (idx !== -1) {
+                        users[idx].addressCity = city;
+                        users[idx].addressDist = dist;
+                        users[idx].addressDetail = detail;
+                        users[idx].addressZip = zip; 
+                        localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                        currentUser = users[idx];
+                        sessionStorage.setItem(DB_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+                    }
+                }
+            }
 
             const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
-            const total = cart.reduce((acc, item) => acc + (item.finalPrice * item.qty), 0);
-            
             const newOrder = {
                 oid: 'ORD-' + Date.now(),
                 uid: currentUser.id,
-                items: [...cart], // Clone
+                items: [...cart],
+                subtotal: subtotal,
+                shipping: shipping,
                 total: total,
-                status: 'pending', // pending -> checked -> confirmed
+                delivery: deliveryInfo,
+                status: 'pending', 
                 timestamp: new Date().toISOString(),
                 adminNote: ''
             };
@@ -727,46 +1127,120 @@
             orders.push(newOrder);
             localStorage.setItem(DB_KEYS.ORDERS, JSON.stringify(orders));
             
-            // Notify Admin
-            addMessage('system', 'admin', `新訂單 ${newOrder.oid} 待核對 (會員: ${currentUser.name})`);
+            addMessage('system', 'admin', `新訂單 ${newOrder.oid} (${deliveryInfo.type === 'pickup' ? '自取' : '宅配'}) 待核對`);
 
             cart = [];
             updateCartCount();
+            closeModal('modal-checkout');
             router('profile');
             toast('訂單已送出，等待管理員核對', 'success');
         }
 
-        // --- PROFILE & MESSAGES ---
         function renderProfile() {
-            document.getElementById('profile-info').innerHTML = `
-                <p>帳號: ${currentUser.id}</p>
-                <p>姓名: ${currentUser.name}</p>
-                <p>電話: ${currentUser.phone || '無'}</p>
-                <p>等級: ${currentUser.level === 1 ? '<span class="text-yellow-600 font-bold">VIP</span>' : '一般會員'}</p>
-            `;
+            document.getElementById('profile-id').value = currentUser.id;
+            document.getElementById('profile-name').value = currentUser.name;
+            document.getElementById('profile-phone').value = currentUser.phone || '';
+            
+            initAddressSelectors('profile-city', 'profile-dist', 'profile-zip', currentUser.addressCity, currentUser.addressDist);
+            document.getElementById('profile-addr-detail').value = currentUser.addressDetail || '';
+            if(currentUser.addressZip) document.getElementById('profile-zip').value = currentUser.addressZip;
+            
+            const levelBadge = document.getElementById('profile-level-badge');
+            if (currentUser.level === 1) {
+                levelBadge.innerHTML = '<i class="fas fa-crown text-yellow-600"></i> VIP會員';
+                levelBadge.className = 'text-xs px-2 py-1 rounded bg-yellow-100 text-yellow-800 font-bold border border-yellow-300';
+            } else {
+                levelBadge.innerHTML = '一般會員';
+                levelBadge.className = 'text-xs px-2 py-1 rounded bg-gray-100 text-gray-600';
+            }
 
-            // Orders
-            const allOrders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const notificationBox = document.getElementById('profile-notifications');
+            let alertsHtml = '';
+
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const confirmedOrders = orders.filter(o => o.uid === currentUser.id && o.status === 'confirmed');
+            if (confirmedOrders.length > 0) {
+                alertsHtml += `<div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-3 mb-2 text-sm">
+                    <p class="font-bold">訂單通知</p>
+                    <p>您有 ${confirmedOrders.length} 筆訂單已成立，請查看下方訂單記錄並進行後續作業。</p>
+                </div>`;
+            }
+
+            const myMsgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES)).filter(m => m.to === currentUser.id || m.from === currentUser.id);
+            const lastMsg = myMsgs.length > 0 ? myMsgs[myMsgs.length - 1] : null;
+            if (lastMsg && lastMsg.from === 'admin') {
+                alertsHtml += `<div class="bg-blue-100 border-l-4 border-blue-500 text-blue-700 p-3 mb-2 text-sm">
+                    <p class="font-bold">新訊息</p>
+                    <p>管理員：${lastMsg.content}</p>
+                </div>`;
+            }
+
+            notificationBox.innerHTML = alertsHtml;
+
+            const allOrders = orders;
             const myOrders = allOrders.filter(o => o.uid === currentUser.id).sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
             
             document.getElementById('profile-orders').innerHTML = myOrders.map(o => {
                 let statusClass = 'bg-gray-200 text-gray-700';
                 let statusText = '待核對';
-                if(o.status === 'confirmed') { statusClass = 'bg-green-100 text-green-700'; statusText = '訂單成立'; }
+                let borderClass = 'border-gray-300';
+                let confirmedIndicator = '';
+
+                if(o.status === 'confirmed') { 
+                    statusClass = 'bg-green-100 text-green-700'; 
+                    statusText = '訂單成立'; 
+                    borderClass = 'border-green-500 border-l-4';
+                    confirmedIndicator = '<span class="text-green-600 text-xs font-bold"><i class="fas fa-check-circle"></i> 已確認</span>';
+                }
                 
                 return `
-                <div class="border p-3 rounded">
+                <div class="border ${borderClass} p-3 rounded bg-white shadow-sm">
                     <div class="flex justify-between mb-2">
-                        <span class="font-mono font-bold">${o.oid}</span>
-                        <span class="text-xs px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                        <span class="font-mono font-bold text-sm">${o.oid}</span>
+                        <div class="flex items-center gap-2">
+                            ${confirmedIndicator}
+                            <span class="text-[10px] px-2 py-1 rounded ${statusClass}">${statusText}</span>
+                        </div>
                     </div>
-                    <p class="text-sm text-gray-600">總金額: $${o.total}</p>
+                    <p class="text-xs text-gray-500 mb-1">${o.delivery.text}</p>
+                    <p class="text-sm text-gray-600">總金額: $${o.total} ${o.shipping > 0 ? `(含運$${o.shipping})` : ''}</p>
                     ${o.adminNote ? `<p class="text-xs bg-blue-50 p-2 mt-2 rounded text-blue-800"><i class="fas fa-info-circle"></i> ${o.adminNote}</p>` : ''}
                 </div>
                 `;
-            }).join('') || '<p class="text-gray-400 text-sm">無訂單記錄</p>';
+            }).join('') || '<p class="text-gray-400 text-sm p-2">無訂單記錄</p>';
 
             renderChat();
+            document.getElementById('member-badge').classList.add('hide');
+        }
+
+        function saveUserProfile() {
+            const name = document.getElementById('profile-name').value.trim();
+            const phone = document.getElementById('profile-phone').value.trim();
+            const city = document.getElementById('profile-city').value;
+            const dist = document.getElementById('profile-dist').value;
+            const detail = document.getElementById('profile-addr-detail').value.trim();
+            const zip = document.getElementById('profile-zip').value.trim();
+
+            if (!name || !phone) return toast('姓名與電話為必填項目', 'error');
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const idx = users.findIndex(u => u.id === currentUser.id);
+            if (idx !== -1) {
+                users[idx].name = name;
+                users[idx].phone = phone;
+                users[idx].addressCity = city;
+                users[idx].addressDist = dist;
+                users[idx].addressDetail = detail;
+                users[idx].addressZip = zip;
+                
+                localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+                
+                currentUser = users[idx];
+                sessionStorage.setItem(DB_KEYS.CURRENT_USER, JSON.stringify(currentUser));
+                
+                document.getElementById('nav-welcome').innerText = `歡迎, ${currentUser.name}`;
+                toast('個人資料已更新', 'success');
+            }
         }
 
         function renderChat() {
@@ -776,10 +1250,11 @@
 
             chatBox.innerHTML = myMsgs.map(m => {
                 const isMe = m.from === currentUser.id;
+                const sender = isMe ? `${currentUser.name} (${currentUser.id})` : (m.from === 'admin' ? '管理員' : m.from);
                 return `
                 <div class="flex ${isMe ? 'justify-end' : 'justify-start'}">
                     <div class="max-w-[80%] rounded p-2 text-sm ${isMe ? 'bg-blue-100' : 'bg-white border'}">
-                        <p class="font-bold text-xs text-gray-500 mb-1">${m.from}</p>
+                        <p class="font-bold text-xs text-gray-500 mb-1">${sender}</p>
                         <p>${m.content}</p>
                     </div>
                 </div>
@@ -832,12 +1307,13 @@
             }
         }
 
-        // --- ADMIN SYSTEM ---
         function renderAdmin() {
-            // Render Pending Orders
             const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
             const pending = orders.filter(o => o.status === 'pending');
             const confirmed = orders.filter(o => o.status === 'confirmed').sort((a,b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+            document.getElementById('count-orders-pending').innerText = pending.length;
+            document.getElementById('count-orders-confirmed').innerText = confirmed.length;
 
             document.getElementById('admin-orders-pending').innerHTML = pending.map(o => `
                 <div class="bg-white p-3 rounded shadow border-l-4 border-yellow-400">
@@ -846,44 +1322,85 @@
                         <span class="text-xs text-gray-500">${new Date(o.timestamp).toLocaleString()}</span>
                     </div>
                     <p class="text-sm">會員: ${o.uid}</p>
+                    <p class="text-xs text-gray-600 my-1">${o.delivery.text}</p>
                     <p class="text-sm font-bold">目前總額: $${o.total}</p>
                     <button onclick="openOrderReview('${o.oid}')" class="mt-2 w-full bg-yellow-500 text-white text-sm py-1 rounded hover:bg-yellow-600">核對並調整</button>
                 </div>
-            `).join('') || '無待核對訂單';
+            `).join('') || '<p class="text-gray-400 text-sm text-center">無待核對訂單</p>';
 
             document.getElementById('admin-orders-confirmed').innerHTML = confirmed.map(o => `
                 <div class="bg-white p-3 rounded shadow border-l-4 border-green-400">
                      <div class="flex justify-between">
-                        <span class="font-bold text-sm">${o.oid}</span>
+                        <div class="flex items-center gap-2">
+                            <input type="checkbox" class="order-checkbox" value="${o.oid}">
+                            <span class="font-bold text-sm">${o.oid}</span>
+                        </div>
                         <span class="text-xs text-gray-500">${new Date(o.timestamp).toLocaleString()}</span>
                     </div>
                     <p class="text-sm">會員: ${o.uid} | 金額: $${o.total}</p>
+                    <p class="text-xs text-gray-500 mb-1">${o.delivery.text}</p>
                     <div class="mt-1 flex gap-2">
+                        <button onclick="printOrder('${o.oid}')" class="bg-gray-700 text-white text-xs px-2 py-1 rounded hover:bg-gray-800 transition"><i class="fas fa-print"></i> 列印</button>
+                        <button onclick="openOrderReview('${o.oid}')" class="bg-yellow-500 text-white text-xs px-2 py-1 rounded mr-1 hover:bg-yellow-600 transition"><i class="fas fa-edit"></i> 修改/檢視</button>
                         <input type="text" id="msg-input-${o.oid}" class="border rounded text-xs p-1 flex-grow" placeholder="給會員留言...">
-                        <button onclick="adminReplyOrder('${o.oid}', '${o.uid}')" class="bg-blue-500 text-white text-xs px-2 rounded">發送</button>
+                        <button onclick="adminReplyOrder('${o.oid}', '${o.uid}')" class="bg-blue-500 text-white text-xs px-2 rounded hover:bg-blue-600 transition">發送</button>
                     </div>
                 </div>
             `).join('');
 
-            // Products
             renderAdminProducts();
-            // Users
             renderAdminUsers();
-            // Messages
             renderAdminMessages();
-            // Ensure chat box is rendered if open
             if(adminChatTarget) renderAdminChatBox();
         }
 
         function checkAdminBadges() {
-            // Simple check if there are unread system messages or pending users
-            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
-            const hasPending = users.some(u => u.status === 'pending');
-            
-            if(hasPending) {
-                document.getElementById('admin-msg-badge').classList.remove('hide');
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const pendingOrders = orders.filter(o => o.status === 'pending').length;
+            const badgeOrders = document.getElementById('badge-admin-orders');
+            if(pendingOrders > 0) {
+                badgeOrders.innerText = pendingOrders;
+                badgeOrders.classList.remove('hide');
             } else {
-                document.getElementById('admin-msg-badge').classList.add('hide');
+                badgeOrders.classList.add('hide');
+            }
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const pendingUsers = users.filter(u => u.status === 'pending').length;
+            const badgeUsers = document.getElementById('badge-admin-users');
+            if(pendingUsers > 0) {
+                badgeUsers.innerText = pendingUsers;
+                badgeUsers.classList.remove('hide');
+                document.getElementById('admin-global-badge').classList.remove('hide');
+            } else {
+                badgeUsers.classList.add('hide');
+                document.getElementById('admin-global-badge').classList.add('hide');
+            }
+
+            const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
+            const lastMsg = msgs.length > 0 ? msgs[msgs.length - 1] : null;
+            const badgeMsg = document.getElementById('badge-admin-msgs');
+            if(lastMsg && lastMsg.to === 'admin') {
+                badgeMsg.classList.remove('hide');
+            } else {
+                badgeMsg.classList.add('hide');
+            }
+        }
+
+        function checkMemberBadges() {
+            if(!currentUser) return;
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
+            
+            const hasConfirmed = orders.some(o => o.uid === currentUser.id && o.status === 'confirmed');
+            const lastMsg = msgs.filter(m => m.to === currentUser.id).pop();
+            const hasNewMsg = lastMsg && lastMsg.from === 'admin';
+
+            const badge = document.getElementById('member-badge');
+            if(hasConfirmed || hasNewMsg) {
+                badge.classList.remove('hide');
+            } else {
+                badge.classList.add('hide');
             }
         }
 
@@ -891,7 +1408,6 @@
             document.querySelectorAll('.admin-tab-content').forEach(el => el.classList.add('hide'));
             document.getElementById(`admin-content-${tab}`).classList.remove('hide');
             
-            // UI tabs style
             btn.parentElement.querySelectorAll('button').forEach(b => {
                 b.classList.remove('bg-gray-200');
                 b.classList.add('bg-gray-100');
@@ -900,29 +1416,60 @@
             btn.classList.add('bg-gray-200');
         }
 
-        // Admin: Product Logic
         function renderAdminProducts() {
             const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
-            document.getElementById('admin-product-list').innerHTML = products.map(p => `
+            document.getElementById('admin-product-list').innerHTML = products.map(p => {
+                const cost = p.cost || 0;
+                const profit = p.price - cost;
+                return `
                 <tr class="border-b">
                     <td class="p-3">${p.id}</td>
                     <td class="p-3"><img src="${p.img}" class="w-8 h-8 object-cover"></td>
                     <td class="p-3">${p.name}</td>
                     <td class="p-3">${p.category}</td>
+                    <td class="p-3">$${cost}</td>
                     <td class="p-3">$${p.price}</td>
+                    <td class="p-3 text-green-600 font-bold">$${profit}</td>
                     <td class="p-3">
-                        <button onclick="editProduct(${p.id})" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
+                        <button onclick="openAdminProductModal(${p.id})" class="text-blue-600 mr-2"><i class="fas fa-edit"></i></button>
                         <button onclick="deleteProduct(${p.id})" class="text-red-600"><i class="fas fa-trash"></i></button>
                     </td>
                 </tr>
-            `).join('');
+            `}).join('');
+        }
+
+        function openAdminProductModal(pid = null) {
+             const modalTitle = document.getElementById('modal-admin-prod-title');
+             if (pid) {
+                const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
+                const p = products.find(i => i.id === pid);
+                if (!p) return;
+                
+                editingProductId = pid;
+                modalTitle.innerText = "修改商品";
+                document.getElementById('modal-prod-name').value = p.name;
+                document.getElementById('modal-prod-cost').value = p.cost || '';
+                document.getElementById('modal-prod-price').value = p.price;
+                document.getElementById('modal-prod-cat').value = p.category;
+                document.getElementById('modal-prod-img').value = p.img;
+             } else {
+                editingProductId = null;
+                modalTitle.innerText = "新增商品";
+                document.getElementById('modal-prod-name').value = '';
+                document.getElementById('modal-prod-cost').value = '';
+                document.getElementById('modal-prod-price').value = '';
+                document.getElementById('modal-prod-cat').value = '';
+                document.getElementById('modal-prod-img').value = '';
+             }
+             document.getElementById('modal-admin-product').classList.remove('hide');
         }
 
         function saveProduct() {
-            const name = document.getElementById('prod-name').value;
-            const price = document.getElementById('prod-price').value;
-            const cat = document.getElementById('prod-cat').value;
-            const img = document.getElementById('prod-img').value;
+            const name = document.getElementById('modal-prod-name').value;
+            const cost = Number(document.getElementById('modal-prod-cost').value);
+            const price = Number(document.getElementById('modal-prod-price').value);
+            const cat = document.getElementById('modal-prod-cat').value;
+            const img = document.getElementById('modal-prod-img').value;
 
             if(!name || !price) return toast('請填寫完整', 'error');
 
@@ -931,30 +1478,18 @@
             if (editingProductId) {
                 const idx = products.findIndex(p => p.id === editingProductId);
                 if(idx !== -1) {
-                    products[idx] = { ...products[idx], name, price: Number(price), category: cat, img };
+                    products[idx] = { ...products[idx], name, price, cost, category: cat, img };
                     toast('商品已更新', 'success');
                 }
             } else {
                 const newId = products.length > 0 ? Math.max(...products.map(p => p.id)) + 1 : 1;
-                products.push({ id: newId, name, price: Number(price), category: cat, img });
+                products.push({ id: newId, name, price, cost, category: cat, img });
                 toast('商品已新增', 'success');
             }
 
             localStorage.setItem(DB_KEYS.PRODUCTS, JSON.stringify(products));
-            resetProductForm();
+            closeModal('modal-admin-product');
             renderAdminProducts();
-        }
-
-        function editProduct(id) {
-            const products = JSON.parse(localStorage.getItem(DB_KEYS.PRODUCTS));
-            const p = products.find(i => i.id === id);
-            if(p) {
-                editingProductId = id;
-                document.getElementById('prod-name').value = p.name;
-                document.getElementById('prod-price').value = p.price;
-                document.getElementById('prod-cat').value = p.category;
-                document.getElementById('prod-img').value = p.img;
-            }
         }
 
         function deleteProduct(id) {
@@ -973,18 +1508,45 @@
             document.getElementById('prod-img').value = '';
         }
 
-        // Admin: Users
         function renderAdminUsers() {
             const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
-            document.getElementById('admin-user-list').innerHTML = users.map(u => `
+            const pendingUsers = users.filter(u => u.status === 'pending');
+            const activeUsers = users.filter(u => u.status !== 'pending' && u.role !== 'admin');
+
+            const pendingContainer = document.getElementById('admin-users-pending-container');
+            const pendingList = document.getElementById('admin-user-list-pending');
+            
+            if(pendingUsers.length > 0) {
+                pendingContainer.classList.remove('hide');
+                pendingList.innerHTML = pendingUsers.map(u => `
+                    <tr class="border-b bg-red-50">
+                        <td class="p-3 font-bold">${u.name} <br><span class="text-xs text-gray-600">${u.id}</span></td>
+                        <td class="p-3 text-xs">
+                            ${u.gender === 'male' ? '男' : (u.gender === 'female' ? '女' : '其他')} / ${u.phone || '無'}
+                            <br>${u.birthday || ''}
+                        </td>
+                        <td class="p-3 flex items-center gap-2">
+                            <select id="approve-level-${u.id}" class="border rounded text-xs p-1">
+                                <option value="0">一般會員</option>
+                                <option value="1">VIP會員</option>
+                            </select>
+                            <button onclick="approveUserWithLevel('${u.id}')" class="bg-green-600 text-white text-xs px-3 py-1 rounded shadow hover:bg-green-700">審核通過</button>
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                pendingContainer.classList.add('hide');
+            }
+
+            document.getElementById('admin-user-list-active').innerHTML = activeUsers.map(u => `
                 <tr class="border-b">
-                    <td class="p-3">${u.id} <br><span class="text-xs text-gray-500">${u.name}</span></td>
+                    <td class="p-3">${u.name} <br><span class="text-xs text-gray-500">${u.id}</span></td>
                     <td class="p-3 text-xs">
-                        ${u.gender === 'male' ? '男' : (u.gender === 'female' ? '女' : '其他')} / ${u.phone || '無電話'}
+                        ${u.gender === 'male' ? '男' : (u.gender === 'female' ? '女' : '其他')} / ${u.phone || '無'}
                         <br>${u.birthday || ''}
                     </td>
                     <td class="p-3">
-                        <span class="px-2 py-1 text-xs rounded ${u.status === 'active' ? 'bg-green-100 text-green-700' : (u.status === 'pending' ? 'bg-yellow-100 text-yellow-700' : 'bg-red-100 text-red-700')}">${u.status === 'pending' ? '待審核' : u.status}</span>
+                        <span class="px-2 py-1 text-xs rounded bg-green-100 text-green-700">正常</span>
                     </td>
                     <td class="p-3">
                          <select onchange="updateUserLevel('${u.id}', this.value)" class="border rounded text-sm">
@@ -993,24 +1555,129 @@
                          </select>
                     </td>
                     <td class="p-3">
-                        ${u.status === 'pending' ? `<button onclick="approveUser('${u.id}')" class="bg-green-500 text-white text-xs px-2 py-1 rounded">審核通過</button>` : ''}
-                        <button onclick="resetUserPass('${u.id}')" class="text-xs bg-gray-200 px-2 py-1 rounded ml-1">重置密碼</button>
+                        <button onclick="openAdminUserModal('${u.id}')" class="text-xs bg-blue-600 text-white px-2 py-1 rounded ml-1">修改</button>
                     </td>
                 </tr>
             `).join('');
         }
 
-        function approveUser(uid) {
+        function openAdminUserModal(uid = null) {
+            const modalTitle = document.getElementById('modal-admin-user-title');
+            const idInput = document.getElementById('adm-user-id');
+            const passInput = document.getElementById('adm-user-pass');
+            const citySelect = document.getElementById('adm-user-city');
+            const distSelect = document.getElementById('adm-user-dist');
+            const zipInput = document.getElementById('adm-user-zip');
+
+            if (uid) {
+                const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+                const user = users.find(u => u.id === uid);
+                if (!user) return;
+                
+                editingUserId = uid;
+                modalTitle.innerText = "修改會員資料";
+                idInput.value = user.id;
+                idInput.disabled = true; 
+                idInput.classList.add('bg-gray-100', 'cursor-not-allowed');
+                
+                document.getElementById('adm-user-name').value = user.name;
+                document.getElementById('adm-user-phone').value = user.phone || '';
+                
+                initAddressSelectors('adm-user-city', 'adm-user-dist', 'adm-user-zip', user.addressCity, user.addressDist);
+                if(user.addressZip) zipInput.value = user.addressZip;
+                document.getElementById('adm-user-addr-detail').value = user.addressDetail || '';
+
+                document.getElementById('adm-user-level').value = user.level;
+                passInput.placeholder = "留空則不修改";
+            } else {
+                editingUserId = null;
+                modalTitle.innerText = "新增會員";
+                idInput.value = '';
+                idInput.disabled = false;
+                idInput.classList.remove('bg-gray-100', 'cursor-not-allowed');
+                
+                document.getElementById('adm-user-name').value = '';
+                document.getElementById('adm-user-phone').value = '';
+                initAddressSelectors('adm-user-city', 'adm-user-dist', 'adm-user-zip', '', '');
+                document.getElementById('adm-user-addr-detail').value = '';
+                document.getElementById('adm-user-level').value = 0;
+                passInput.placeholder = "請輸入密碼";
+            }
+            document.getElementById('modal-admin-user').classList.remove('hide');
+        }
+
+        function saveAdminUser() {
+            const id = document.getElementById('adm-user-id').value.trim();
+            const pass = document.getElementById('adm-user-pass').value.trim();
+            const name = document.getElementById('adm-user-name').value.trim();
+            const phone = document.getElementById('adm-user-phone').value.trim();
+            const level = parseInt(document.getElementById('adm-user-level').value);
+            
+            const city = document.getElementById('adm-user-city').value;
+            const dist = document.getElementById('adm-user-dist').value;
+            const zip = document.getElementById('adm-user-zip').value;
+            const detail = document.getElementById('adm-user-addr-detail').value.trim();
+
+            if (!id || !name) return toast('帳號與姓名為必填', 'error');
+
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+
+            if (editingUserId) {
+                const idx = users.findIndex(u => u.id === editingUserId);
+                if (idx !== -1) {
+                    users[idx].name = name;
+                    users[idx].phone = phone;
+                    users[idx].level = level;
+                    users[idx].addressCity = city;
+                    users[idx].addressDist = dist;
+                    users[idx].addressDetail = detail;
+                    users[idx].addressZip = zip;
+                    if (pass) users[idx].pass = pass;
+                    
+                    toast('會員資料已更新', 'success');
+                }
+            } else {
+                if (!pass) return toast('新增會員需設定密碼', 'error');
+                if (users.some(u => u.id === id)) return toast('帳號已存在', 'error');
+
+                users.push({
+                    id, pass, name, phone, level,
+                    addressCity: city,
+                    addressDist: dist,
+                    addressDetail: detail,
+                    addressZip: zip,
+                    role: 'user',
+                    status: 'active', 
+                    joined: new Date().toISOString()
+                });
+                toast('會員已新增', 'success');
+            }
+
+            localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
+            closeModal('modal-admin-user');
+            renderAdminUsers();
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hide');
+        }
+
+        function approveUserWithLevel(uid) {
+            const levelSelect = document.getElementById(`approve-level-${uid}`);
+            const level = parseInt(levelSelect.value);
+            
             const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
             const user = users.find(u => u.id === uid);
+            
             if(user) {
                 user.status = 'active';
+                user.level = level; 
                 localStorage.setItem(DB_KEYS.USERS, JSON.stringify(users));
                 
-                // Auto send welcome message
-                addMessage('admin', uid, '您的帳號已審核通過，歡迎開始購物！');
+                const levelName = level === 1 ? "VIP會員" : "一般會員";
+                addMessage('admin', uid, `您的帳號已審核通過，目前等級為：${levelName}，歡迎開始購物！`);
                 
-                toast('會員已開通', 'success');
+                toast(`會員已開通 (等級: ${levelName})`, 'success');
                 renderAdminUsers();
                 checkAdminBadges();
             }
@@ -1037,7 +1704,6 @@
             }
         }
 
-        // Admin: Messages Logic
         function renderAdminMessages() {
             const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
             const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS)).filter(u => u.role !== 'admin');
@@ -1047,13 +1713,12 @@
                 const userMsgs = msgs.filter(m => m.from === u.id || m.to === u.id);
                 const lastMsg = userMsgs.length > 0 ? userMsgs[userMsgs.length - 1].content : '尚無訊息';
                 const isPending = u.status === 'pending';
-                // Highlight active user
                 const isActive = adminChatTarget === u.id;
                 
                 return `
                 <div onclick="openAdminChat('${u.id}')" class="p-3 border-b cursor-pointer hover:bg-gray-50 ${isActive ? 'bg-blue-50' : ''}">
                     <div class="flex justify-between items-center">
-                        <span class="font-bold text-sm">${u.id} ${u.name}</span>
+                        <span class="font-bold text-sm">${u.name} (${u.id})</span>
                         ${isPending ? '<span class="text-[10px] bg-yellow-400 text-white px-1 rounded">待審核</span>' : ''}
                     </div>
                     <p class="text-xs text-gray-500 truncate">${lastMsg}</p>
@@ -1064,29 +1729,32 @@
 
         function openAdminChat(uid) {
             adminChatTarget = uid;
-            renderAdminMessages(); // Update list highlight only
-            renderAdminChatBox();  // Render chat content
+            renderAdminMessages();
+            renderAdminChatBox();
         }
 
         function renderAdminChatBox() {
             if(!adminChatTarget) return;
             const uid = adminChatTarget;
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
+            const targetUser = users.find(u => u.id === uid);
+            const targetName = targetUser ? targetUser.name : uid;
 
-            document.getElementById('admin-chat-header').innerText = `與 ${uid} 的對話`;
+            document.getElementById('admin-chat-header').innerText = `與 ${targetName} (${uid}) 的對話`;
             document.getElementById('admin-chat-input').disabled = false;
             document.getElementById('admin-chat-send-btn').disabled = false;
             
-            // Render Messages
             const msgs = JSON.parse(localStorage.getItem(DB_KEYS.MESSAGES));
             const chatMsgs = msgs.filter(m => m.from === uid || m.to === uid);
             
             const box = document.getElementById('admin-chat-box');
             box.innerHTML = chatMsgs.map(m => {
                 const isAdmin = m.from === 'admin';
+                const senderDisplay = isAdmin ? '管理員' : `${targetName} (${m.from})`;
                 return `
                 <div class="flex ${isAdmin ? 'justify-end' : 'justify-start'}">
                     <div class="max-w-[80%] rounded p-2 text-sm ${isAdmin ? 'bg-blue-100' : 'bg-white border'}">
-                         <p class="font-bold text-xs text-gray-500 mb-1">${isAdmin ? '管理員' : m.from}</p>
+                         <p class="font-bold text-xs text-gray-500 mb-1">${senderDisplay}</p>
                         <p>${m.content}</p>
                         <p class="text-[10px] text-gray-400 text-right mt-1">${new Date(m.time).toLocaleString()}</p>
                     </div>
@@ -1104,47 +1772,119 @@
             
             addMessage('admin', adminChatTarget, text);
             input.value = '';
-            // Only update chat box to avoid full re-render
             renderAdminChatBox();
-            renderAdminMessages(); // Update last message preview in list
+            renderAdminMessages();
         }
 
-        // Admin: Order Review Logic
         function openOrderReview(oid) {
             const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS));
             reviewingOrder = orders.find(o => o.oid === oid);
             if(!reviewingOrder) return;
 
-            const list = document.getElementById('order-review-items');
-            list.innerHTML = reviewingOrder.items.map((item, idx) => `
-                <div class="flex justify-between items-center border-b pb-2">
-                    <div>
-                        <p class="font-bold text-sm">${item.name}</p>
-                        <p class="text-xs text-gray-500">原單價: ${item.originalPrice} | 數量: ${item.qty}</p>
-                    </div>
-                    <div class="flex items-center gap-2">
-                        <label class="text-xs">調整單價:</label>
-                        <input type="number" value="${item.finalPrice}" 
-                            onchange="updateOrderItemPrice('${oid}', ${idx}, this.value)" 
-                            class="w-20 border rounded p-1 text-sm text-right">
-                    </div>
-                </div>
-            `).join('');
+            const orderUser = users.find(u => u.id === reviewingOrder.uid);
+            const userName = orderUser ? orderUser.name : '未知';
 
-            document.getElementById('review-original-total').innerText = reviewingOrder.total;
-            document.getElementById('review-final-total').innerText = reviewingOrder.total;
-            document.getElementById('review-msg').value = `親愛的會員，您的訂單 ${oid} 已確認。\n品項價格已核對。\n\n請匯款至：\n銀行代號：000\n帳號：1234-5678-9000\n金額：$${reviewingOrder.total}\n\n匯款後請通知我們，謝謝！`;
+            reviewingOrder.items.forEach(i => {
+                if(typeof i.stockStatus === 'undefined') i.stockStatus = 'in_stock';
+            });
+
+            document.getElementById('review-member-info').innerText = `${userName} (${reviewingOrder.uid})`;
+            document.getElementById('review-delivery-info').innerText = reviewingOrder.delivery.text;
+
+            const isConfirmed = reviewingOrder.status === 'confirmed';
+            const btnFn = document.getElementById('btn-confirm-order');
+            
+            if(isConfirmed) {
+                btnFn.innerText = "更新訂單並通知";
+                btnFn.classList.replace('bg-green-600', 'bg-blue-600');
+                btnFn.classList.replace('hover:bg-green-700', 'hover:bg-blue-700');
+                document.getElementById('review-msg').value = `親愛的會員，您的訂單 ${oid} 內容已更新。\n\n請確認最新的訂單資訊。\n總金額：$${reviewingOrder.total}\n\n如有問題請聯繫我們。`;
+            } else {
+                btnFn.innerText = "確認訂單並通知";
+                btnFn.classList.replace('bg-blue-600', 'bg-green-600');
+                btnFn.classList.replace('hover:bg-blue-700', 'hover:bg-green-700');
+                document.getElementById('review-msg').value = `親愛的會員，您的訂單 ${oid} 已確認。\n\n請匯款至：\n銀行代號：000\n帳號：1234-5678-9000\n金額：$${reviewingOrder.total}\n\n匯款後請通知我們，謝謝！`;
+            }
+
+            renderReviewItems();
+            updateReviewTotals();
             
             document.getElementById('modal-order-review').classList.remove('hide');
+        }
+
+        function renderReviewItems() {
+            const list = document.getElementById('order-review-items');
+            list.innerHTML = reviewingOrder.items.map((item, idx) => {
+                const isOutOfStock = item.stockStatus === 'out_of_stock';
+                return `
+                <tr class="border-b ${isOutOfStock ? 'bg-gray-100 text-gray-400' : ''}">
+                    <td class="p-2">
+                        <p class="font-bold text-sm">${item.name}</p>
+                        <p class="text-xs text-gray-500">原價: ${item.originalPrice}</p>
+                    </td>
+                    <td class="p-2">
+                        <input type="number" value="${item.qty}" min="0" 
+                            onchange="updateOrderItemQty('${reviewingOrder.oid}', ${idx}, this.value)" 
+                            class="w-16 border rounded p-1 text-sm text-center" ${isOutOfStock ? 'disabled' : ''}>
+                    </td>
+                    <td class="p-2">
+                        <input type="number" value="${item.finalPrice}" 
+                            onchange="updateOrderItemPrice('${reviewingOrder.oid}', ${idx}, this.value)" 
+                            class="w-20 border rounded p-1 text-sm text-right" ${isOutOfStock ? 'disabled' : ''}>
+                    </td>
+                    <td class="p-2">
+                        <select onchange="updateOrderItemStatus('${reviewingOrder.oid}', ${idx}, this.value)" 
+                            class="border rounded p-1 text-xs ${isOutOfStock ? 'text-red-500 font-bold' : 'text-green-600'}">
+                            <option value="in_stock" ${!isOutOfStock ? 'selected' : ''}>正常</option>
+                            <option value="out_of_stock" ${isOutOfStock ? 'selected' : ''}>缺貨</option>
+                        </select>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        function updateOrderItemStatus(oid, idx, status) {
+            if (reviewingOrder && reviewingOrder.oid === oid) {
+                reviewingOrder.items[idx].stockStatus = status;
+                renderReviewItems();
+                updateReviewTotals();
+            }
+        }
+
+        function updateOrderItemQty(oid, idx, qty) {
+            qty = Number(qty);
+            if (reviewingOrder && reviewingOrder.oid === oid && qty >= 0) {
+                reviewingOrder.items[idx].qty = qty;
+                updateReviewTotals();
+            }
         }
 
         function updateOrderItemPrice(oid, idx, newPrice) {
             newPrice = Number(newPrice);
             if (reviewingOrder && reviewingOrder.oid === oid) {
                 reviewingOrder.items[idx].finalPrice = newPrice;
-                // Recalculate total
-                reviewingOrder.total = reviewingOrder.items.reduce((acc, i) => acc + (i.finalPrice * i.qty), 0);
-                document.getElementById('review-final-total').innerText = reviewingOrder.total;
+                updateReviewTotals();
+            }
+        }
+
+        function updateReviewTotals() {
+            if (!reviewingOrder) return;
+            
+            const subtotal = reviewingOrder.items.reduce((acc, i) => {
+                return i.stockStatus === 'out_of_stock' ? acc : acc + (i.finalPrice * i.qty);
+            }, 0);
+
+            reviewingOrder.total = subtotal + reviewingOrder.shipping;
+            
+            document.getElementById('review-shipping-fee').innerText = reviewingOrder.shipping;
+            document.getElementById('review-final-total').innerText = reviewingOrder.total;
+            
+            const msgBox = document.getElementById('review-msg');
+            if (reviewingOrder.status === 'confirmed') {
+                 msgBox.value = `親愛的會員，您的訂單 ${reviewingOrder.oid} 內容已更新。\n\n最新總金額：$${reviewingOrder.total}\n\n請確認，謝謝！`;
+            } else {
+                 msgBox.value = `親愛的會員，您的訂單 ${reviewingOrder.oid} 已確認。\n\n請匯款至：\n銀行代號：000\n帳號：1234-5678-9000\n金額：$${reviewingOrder.total}\n\n匯款後請通知我們，謝謝！`;
             }
         }
 
@@ -1154,22 +1894,128 @@
             const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
             const idx = orders.findIndex(o => o.oid === reviewingOrder.oid);
             if(idx !== -1) {
-                // Update Order in DB
                 const msg = document.getElementById('review-msg').value;
                 orders[idx] = reviewingOrder;
                 orders[idx].status = 'confirmed';
-                orders[idx].adminNote = msg; // Store the confirmation note
+                orders[idx].adminNote = msg; 
                 
                 localStorage.setItem(DB_KEYS.ORDERS, JSON.stringify(orders));
                 
-                // Send Message
                 addMessage('admin', reviewingOrder.uid, msg);
 
-                toast('訂單已確認並通知會員', 'success');
+                exportOrderToCSV(reviewingOrder);
+
+                toast('訂單已確認並通知會員，Excel報表已下載', 'success');
                 closeModal('modal-order-review');
                 renderAdmin();
                 reviewingOrder = null;
             }
+        }
+
+        function exportOrderToCSV(order) {
+            let csvContent = "\uFEFF"; 
+            csvContent += "訂單編號,訂單日期,會員帳號,總金額,配送方式,運費\n";
+            const orderDate = new Date(order.timestamp).toLocaleString();
+            csvContent += `${order.oid},"${orderDate}",${order.uid},${order.total},"${order.delivery.text}",${order.shipping}\n\n`;
+            csvContent += "商品名稱,單價,數量,狀態,小計\n";
+            order.items.forEach(item => {
+                const status = item.stockStatus === 'out_of_stock' ? '缺貨' : '正常';
+                const subtotal = item.stockStatus === 'out_of_stock' ? 0 : item.finalPrice * item.qty;
+                csvContent += `"${item.name}",${item.finalPrice},${item.qty},${status},${subtotal}\n`;
+            });
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const link = document.createElement("a");
+            link.setAttribute("href", url);
+            link.setAttribute("download", `訂單報表_${order.oid}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printOrder(oid) {
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const order = orders.find(o => o.oid === oid);
+            if (!order) return;
+            
+            renderPrintView([order]);
+        }
+
+        function printSelectedOrders() {
+            const checkboxes = document.querySelectorAll('.order-checkbox:checked');
+            if (checkboxes.length === 0) return toast('請先勾選要列印的訂單', 'warning');
+            
+            const selectedOids = Array.from(checkboxes).map(cb => cb.value);
+            const orders = JSON.parse(localStorage.getItem(DB_KEYS.ORDERS));
+            const selectedOrders = orders.filter(o => selectedOids.includes(o.oid));
+            
+            renderPrintView(selectedOrders);
+        }
+
+        function renderPrintView(ordersToPrint) {
+            const users = JSON.parse(localStorage.getItem(DB_KEYS.USERS)) || [];
+            const printWindow = window.open('', '_blank');
+            let html = `
+            <html>
+            <head>
+                <title>訂單列印</title>
+                <style>
+                    body { font-family: 'Noto Sans TC', sans-serif; padding: 20px; }
+                    .order-container { border: 1px solid #ccc; padding: 20px; margin-bottom: 20px; page-break-after: always; }
+                    h2 { text-align: center; border-bottom: 2px solid #333; padding-bottom: 10px; }
+                    .info-grid { display: grid; grid-template-columns: 1fr 1fr; margin-bottom: 20px; }
+                    table { w-full; border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+                    th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+                    th { background-color: #f2f2f2; }
+                    .total-row { text-align: right; font-weight: bold; font-size: 1.2em; }
+                    .footer { text-align: center; font-size: 0.8em; color: #666; margin-top: 30px; }
+                </style>
+            </head>
+            <body>`;
+
+            ordersToPrint.forEach(order => {
+                const user = users.find(u => u.id === order.uid);
+                const userName = user ? user.name : '未知';
+                const date = new Date(order.timestamp).toLocaleString();
+                let itemsHtml = '';
+                order.items.forEach(item => {
+                    const status = item.stockStatus === 'out_of_stock' ? '(缺貨)' : '';
+                    const sub = item.stockStatus === 'out_of_stock' ? 0 : item.finalPrice * item.qty;
+                    itemsHtml += `<tr><td>${item.name} ${status}</td><td>${item.finalPrice}</td><td>${item.qty}</td><td>${sub}</td></tr>`;
+                });
+
+                html += `
+                <div class="order-container">
+                    <h2>JCmarket 出貨單</h2>
+                    <div class="info-grid">
+                        <div>
+                            <p><strong>訂單編號:</strong> ${order.oid}</p>
+                            <p><strong>會員資料:</strong> ${userName} (${order.uid})</p>
+                            <p><strong>訂購日期:</strong> ${date}</p>
+                        </div>
+                        <div>
+                            <p><strong>配送方式:</strong> ${order.delivery.type === 'pickup' ? '到店自取' : '宅配'}</p>
+                            <p><strong>配送資訊:</strong> ${order.delivery.text}</p>
+                        </div>
+                    </div>
+                    <table>
+                        <thead><tr><th>商品名稱</th><th>單價</th><th>數量</th><th>小計</th></tr></thead>
+                        <tbody>${itemsHtml}</tbody>
+                    </table>
+                    <div class="total-row">
+                        <p>運費: $${order.shipping}</p>
+                        <p>總金額: $${order.total}</p>
+                    </div>
+                    <div class="footer">
+                        感謝您的訂購！如有問題請聯繫客服。<br>
+                        JCmarket 購物網
+                    </div>
+                </div>`;
+            });
+
+            html += `<script>window.print();<\/script></body></html>`;
+            printWindow.document.write(html);
+            printWindow.document.close();
         }
 
         function adminReplyOrder(oid, uid) {
@@ -1182,7 +2028,6 @@
             }
         }
 
-        // --- EXPORT / IMPORT ---
         function exportData() {
             const data = {
                 users: JSON.parse(localStorage.getItem(DB_KEYS.USERS)),
@@ -1218,7 +2063,6 @@
             reader.readAsText(file);
         }
 
-        // --- UTILS ---
         function toast(msg, type='info') {
             const container = document.getElementById('toast-container');
             const el = document.createElement('div');
@@ -1227,7 +2071,6 @@
             el.innerText = msg;
             container.appendChild(el);
             
-            // Animation
             setTimeout(() => { el.classList.remove('translate-x-full', 'opacity-0'); }, 10);
             setTimeout(() => { 
                 el.classList.add('opacity-0'); 
